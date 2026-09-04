@@ -1222,63 +1222,97 @@ async function placeOrder() {
     }));
 
   const orderPayload = {
-    customer_name: data.name,
-    phone: data.phone,
-    address: data.address,
+  customer_name: String(data.name || "").trim(),
+  phone: String(data.phone || "").trim(),
+  address: String(data.address || "").trim(),
 
-    items: orderItems,
+  items: orderItems,
 
-    subtotal: subtotal,
-    delivery_charge: delivery,
-    total: total,
+  subtotal: Number(subtotal) || 0,
+  delivery_charge: Number(delivery) || 0,
+  total: Number(total) || 0,
 
-    payment_method:
-      data.payment || null,
+  payment_method: data.payment
+    ? String(data.payment).trim()
+    : null,
 
-    note:
-      data.note || null,
+  note: data.note
+    ? String(data.note).trim()
+    : null,
 
-    status: "pending"
-  };
+  status: "pending"
+};
 
-  const button =
-    document.querySelector("#placeOrderBtn");
+const button =
+  document.querySelector("#placeOrderBtn");
 
-  const originalButtonText =
-    button
-      ? button.textContent
-      : "";
+const originalButtonText =
+  button ? button.textContent : "";
 
-  try {
+try {
+  if (button) {
+    button.disabled = true;
+    button.textContent = "অর্ডার করা হচ্ছে...";
+  }
+
+  console.log("Creating order:", orderPayload);
+
+  // CUSTOMER NAME CHECK
+  if (!orderPayload.customer_name) {
+    alert("দয়া করে আপনার নাম লিখুন।");
     if (button) {
-      button.disabled = true;
-      button.textContent =
-        "অর্ডার করা হচ্ছে...";
+      button.disabled = false;
+      button.textContent = originalButtonText;
     }
+    return;
+  }
 
-    console.log(
-      "Creating order:",
-      orderPayload
+  // PHONE CHECK
+  if (!orderPayload.phone) {
+    alert("দয়া করে আপনার ফোন নম্বর দিন।");
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalButtonText;
+    }
+    return;
+  }
+
+  // ADDRESS CHECK
+  if (!orderPayload.address) {
+    alert("দয়া করে আপনার ঠিকানা দিন।");
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalButtonText;
+    }
+    return;
+  }
+
+  const {
+    data: order,
+    error
+  } = await supabaseClient
+    .from("orders")
+    .insert(orderPayload)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Order insert error:", error);
+
+    alert(
+      "অর্ডার করা যায়নি।\n\n" +
+      error.message
     );
 
-    const { data: order, error } = await supabaseClient
-  .from("orders")
-  .insert(orderPayload)
-  .select()
-  .single();
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalButtonText;
+    }
 
-if (error) {
-  console.error("Order insert error:", error);
+    return;
+  }
 
-  alert(
-    "অর্ডার করা যায়নি।\n\n" +
-    error.message
-  );
-
-  return;
-}
-
-console.log("Order created:", order);
+  console.log("Order created:", order);
 
     // CREATE WHATSAPP MESSAGE
     // BEFORE CART IS CLEARED
