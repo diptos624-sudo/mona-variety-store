@@ -519,6 +519,7 @@ async function loadProducts() {
     await supabaseClient
       .from("products")
       .select("*")
+      .eq("active", true)
       .order("created_at", {
         ascending: false
       });
@@ -542,14 +543,14 @@ async function loadProducts() {
 
   products = data || [];
 
-  alert(
-    "Products found: " +
-    products.length
-  );
-
   console.log(
     "Products loaded:",
     products
+  );
+
+  console.log(
+    "Products found:",
+    products.length
   );
 
   if (typeof renderProducts === "function") {
@@ -565,23 +566,33 @@ async function loadProducts() {
   }
 }
 
+
+// ==========================================
+// LOAD PAYMENT METHODS
+// ==========================================
+
+async function loadPaymentMethods() {
+
+  const { data, error } =
+    await supabaseClient
+      .from("payment_methods")
+      .select("*")
+      .eq("active", true)
+      .order("name", {
+        ascending: true
+      });
+
   if (error) {
 
     console.error(
-      "Product Error:",
+      "Payment Error:",
       error
     );
 
+    paymentMethods = [];
+
     return;
-
   }
-
-
-  products =
-    data || [];
-
-}
-
 
 // ==========================================
 // LOAD PAYMENT METHODS
