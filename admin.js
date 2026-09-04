@@ -6345,4 +6345,311 @@ setTimeout(
 
 console.log(
     "🚀 Mona Variety Store Premium Admin.js loaded."
+);/* ============================================================
+   FINAL PRODUCT IMAGE UPLOAD
+   SUPABASE STORAGE BUCKET: Product images
+   ============================================================ */
+
+async function uploadProductImageIfSelected() {
+
+    const fileInput =
+        document.getElementById("productImageUpload");
+
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        return null;
+    }
+
+    const file = fileInput.files[0];
+
+    if (!file.type.startsWith("image/")) {
+        throw new Error("শুধু image file upload করা যাবে।");
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Image সর্বোচ্চ 5MB হতে হবে।");
+    }
+
+    const extension =
+        file.name.split(".").pop().toLowerCase();
+
+    const safeName =
+        file.name
+            .replace(/\.[^/.]+$/, "")
+            .replace(/[^a-zA-Z0-9-_]/g, "-")
+            .toLowerCase();
+
+    const filePath =
+        "products/" +
+        Date.now() +
+        "-" +
+        safeName +
+        "." +
+        extension;
+
+    const { error: uploadError } =
+        await supabaseClient.storage
+            .from("Product images")
+            .upload(filePath, file, {
+                cacheControl: "3600",
+                upsert: false,
+                contentType: file.type
+            });
+
+    if (uploadError) {
+        throw uploadError;
+    }
+
+    const { data } =
+        supabaseClient.storage
+            .from("Product images")
+            .getPublicUrl(filePath);
+
+    if (!data?.publicUrl) {
+        throw new Error(
+            "Uploaded image-এর public URL পাওয়া যায়নি।"
+        );
+    }
+
+    return data.publicUrl;
+}
+
+
+/* ============================================================
+   REPLACE SAVE PRODUCT
+   ============================================================ */
+
+window.saveProduct = async function () {
+
+    const name =
+        getValue("productName");
+
+    const categoryId =
+        getValue("productCategory");
+
+    const price =
+        numberOrZero(
+            getValue("productPrice")
+        );
+
+    if (!name) {
+        showMessage(
+            "productMessage",
+            "Product name দিন।",
+            "error"
+        );
+        return;
+    }
+
+    if (price <= 0) {
+        showMessage(
+            "productMessage",
+            "Valid price দিন।",
+            "error"
+        );
+        return;
+    }
+
+    const button =
+        $("saveProductBtn");
+
+    setButtonLoading(
+        button,
+        true,
+        editingProductId
+            ? "Updating..."
+            : "Saving..."
+    );
+
+    try {
+
+        /*
+         * Existing image রাখবে যদি নতুন image
+         * select না করা হয়।
+         */
+        let imageUrl =
+            getValue("productImage");
+
+        const uploadedImage =
+            await uploadProductImageIfSelected();
+
+        if (uploadedImage) {
+            imageUrl = uploadedImage;
+        }
+
+        const payload = {
+
+            name: name,
+
+            category_id:
+                categoryId || null,
+
+            price: price,
+
+            old_price:
+                numberOrNull(
+                    getValue("productOldPrice")
+                ),
+
+            stock:
+                numberOrZero(
+                    getValue("productStock")
+                ),
+
+            image:
+                imageUrl || null,
+
+            image_url:
+                imageUrl || null,
+
+            description:
+                getValue("productDescription"),
+
+            active:
+                $("productActive")
+                    ? $("productActive").checked
+                    : true,
+
+            featured:
+                $("productFeatured")
+                    ? $("productFeatured").checked
+                    : false,
+
+            is_new:
+                $("productNew")
+                    ? $("productNew").checked
+                    : false,
+
+            best_seller:
+                $("productBestSeller")
+                    ? $("productBestSeller").checked
+                    : false,
+
+            discount:
+                getValue("productDiscount")
+        };
+
+
+        let result;
+
+        if (editingProductId) {
+
+            result =
+                await supabaseClient
+                    .from("products")
+                    .update(payload)
+                    .eq(
+                        "id",
+                        editingProductId
+                    );
+
+        } else {
+
+            result =
+                await supabaseClient
+                    .from("products")
+                    .insert(payload);
+
+        }
+
+        if (result.error) {
+            throw result.error;
+        }
+
+        showMessage(
+            "productMessage",
+            editingProductId
+                ? "✅ Product updated successfully."
+                : "✅ Product added successfully.",
+            "success"
+        );
+
+        const fileInput =
+            $("productImageUpload");
+
+        if (fileInput) {
+            fileInput.value = "";
+        }
+
+        const preview =
+            $("productImagePreview");
+
+        if (preview) {
+            preview.removeAttribute("src");
+            preview.style.display = "none";
+        }
+
+        resetProductForm();
+
+        await loadProducts();
+
+    } catch (error) {
+
+        console.error(
+            "FINAL PRODUCT SAVE ERROR:",
+            error
+        );
+
+        showMessage(
+            "productMessage",
+            "Save failed: " +
+            (
+                error?.message ||
+                "Unknown error"
+            ),
+            "error"
+        );
+
+    } finally {
+
+        setButtonLoading(
+            button,
+            false
+        );
+
+    }
+};
+
+
+/* ============================================================
+   IMAGE PREVIEW
+   ============================================================ */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const input =
+            document.getElementById(
+                "productImageUpload"
+            );
+
+        const preview =
+            document.getElementById(
+                "productImagePreview"
+            );
+
+        if (!input || !preview) return;
+
+        input.addEventListener(
+            "change",
+            function () {
+
+                const file =
+                    input.files?.[0];
+
+                if (!file) {
+                    preview.removeAttribute("src");
+                    preview.style.display = "none";
+                    return;
+                }
+
+                preview.src =
+                    URL.createObjectURL(file);
+
+                preview.style.display =
+                    "block";
+            }
+        );
+
+    }
 );
