@@ -544,7 +544,8 @@ async function loadProducts() {
   );
 
   products = data || [];
-
+console.log("TOTAL PRODUCTS:", products.length);
+console.log("PRODUCT DATA:", products);
   // Product render
   if (typeof renderProducts === "function") {
     renderProducts();
