@@ -515,8 +515,6 @@ function filterCategory(name) {
 
 async function loadProducts() {
 
-  console.log("Loading products...");
-
   const { data, error } =
     await supabaseClient
       .from("products")
@@ -534,19 +532,26 @@ async function loadProducts() {
 
     products = [];
 
-    return;
+    alert(
+      "Product Error: " +
+      error.message
+    );
 
+    return;
   }
+
+  products = data || [];
+
+  alert(
+    "Products found: " +
+    products.length
+  );
 
   console.log(
     "Products loaded:",
-    data
+    products
   );
 
-  products = data || [];
-console.log("TOTAL PRODUCTS:", products.length);
-console.log("PRODUCT DATA:", products);
-  // Product render
   if (typeof renderProducts === "function") {
     renderProducts();
   }
