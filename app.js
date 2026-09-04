@@ -1221,7 +1221,9 @@ async function placeOrder() {
       image: item.image || ""
     }));
 
-  const orderPayload = {
+ const orderPayload = {
+  id: crypto.randomUUID(),
+
   customer_name: String(data.name || "").trim(),
   phone: String(data.phone || "").trim(),
   address: String(data.address || "").trim(),
@@ -1255,106 +1257,129 @@ try {
     button.textContent = "অর্ডার করা হচ্ছে...";
   }
 
-  console.log("Creating order:", orderPayload);
+  console.log(
+    "Creating order:",
+    orderPayload
+  );
 
   // CUSTOMER NAME CHECK
   if (!orderPayload.customer_name) {
-    alert("দয়া করে আপনার নাম লিখুন।");
+    alert("দয়া করে আপনার নাম লিখুন.");
+
     if (button) {
       button.disabled = false;
-      button.textContent = originalButtonText;
+      button.textContent =
+        originalButtonText;
     }
+
     return;
   }
 
   // PHONE CHECK
   if (!orderPayload.phone) {
-    alert("দয়া করে আপনার ফোন নম্বর দিন।");
+    alert("দয়া করে আপনার ফোন নম্বর দিন.");
+
     if (button) {
       button.disabled = false;
-      button.textContent = originalButtonText;
+      button.textContent =
+        originalButtonText;
     }
+
     return;
   }
 
   // ADDRESS CHECK
   if (!orderPayload.address) {
-    alert("দয়া করে আপনার ঠিকানা দিন।");
+    alert("দয়া করে আপনার ঠিকানা দিন.");
+
     if (button) {
       button.disabled = false;
-      button.textContent = originalButtonText;
+      button.textContent =
+        originalButtonText;
     }
+
     return;
   }
 
-const { error } = await supabaseClient
-  .from("orders")
-  .insert(orderPayload);
+  // INSERT ORDER
+  const { error } =
+    await supabaseClient
+      .from("orders")
+      .insert(orderPayload);
 
-if (error) {
-  console.error("Order insert error:", error);
-
-  alert(
-    "অর্ডার করা যায়নি।\n\n" +
-    error.message
-  );
-
-  if (button) {
-    button.disabled = false;
-    button.textContent = originalButtonText;
-  }
-
-  return;
-}
-
-const order = {
-  ...orderPayload
-};
-  console.log("Order created:", order);
-
-    // CREATE WHATSAPP MESSAGE
-    // BEFORE CART IS CLEARED
-    const whatsappMessage =
-      createWhatsAppMessage(
-        order,
-        data
-      );
-
-    // CLEAR CART
-    cart = [];
-
-    saveCart();
-    renderCart();
-    updateCartUI();
-
-    // CLOSE CHECKOUT
-    closeCheckout();
-
-    // SHOW SUCCESS
-    showOrderSuccess(
-      order,
-      whatsappMessage
-    );
-
-  } catch (error) {
+  if (error) {
     console.error(
-      "Place order exception:",
+      "Order insert error:",
       error
     );
 
     alert(
-      "অর্ডার করার সময় সমস্যা হয়েছে।\n\n" +
-      (error.message || error)
+      "অর্ডার করা যায়নি.\n\n" +
+      error.message
     );
 
-  } finally {
     if (button) {
       button.disabled = false;
-
       button.textContent =
-        originalButtonText ||
-        "অর্ডার করুন";
+        originalButtonText;
     }
+
+    return;
+  }
+
+  // ORDER OBJECT
+  // ID IS ALREADY GENERATED ABOVE
+  const order = {
+    ...orderPayload
+  };
+
+  console.log(
+    "Order created:",
+    order
+  );
+
+  // CREATE WHATSAPP MESSAGE
+  // BEFORE CART IS CLEARED
+  const whatsappMessage =
+    createWhatsAppMessage(
+      order,
+      data
+    );
+
+  // CLEAR CART
+  cart = [];
+
+  saveCart();
+  renderCart();
+  updateCartUI();
+
+  // CLOSE CHECKOUT
+  closeCheckout();
+
+  // SHOW SUCCESS
+  showOrderSuccess(
+    order,
+    whatsappMessage
+  );
+
+} catch (error) {
+  console.error(
+    "Place order exception:",
+    error
+  );
+
+  alert(
+    "অর্ডার করার সময় সমস্যা হয়েছে.\n\n" +
+    (error.message || error)
+  );
+
+} finally {
+  if (button) {
+    button.disabled = false;
+
+    button.textContent =
+      originalButtonText ||
+      "অর্ডার করুন";
   }
 }
 
