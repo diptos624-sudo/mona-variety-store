@@ -34,6 +34,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         initializeSupabase();
 
+        /*
+         * Test Storage bucket before starting admin.
+         * This confirms whether Admin can actually see
+         * the product-images bucket.
+         */
+        await testProductImageBucket();
+
         injectPremiumAdminStyles();
 
         bindEvents();
@@ -42,12 +49,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     } catch (error) {
 
-        console.error("ADMIN INIT ERROR:", error);
-
-        showGlobalError(
-            error?.message || "Admin system initialization failed."
+        console.error(
+            "ADMIN INIT ERROR:",
+            error
         );
 
+        showGlobalError(
+            error?.message ||
+            "Admin system initialization failed."
+        );
     }
 
 });
@@ -60,12 +70,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 function initializeSupabase() {
 
     if (!window.supabase) {
+
         throw new Error(
             "Supabase library not loaded."
         );
     }
 
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    const url =
+        window.SUPABASE_URL;
+
+    const key =
+        window.SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+
         throw new Error(
             "Supabase configuration missing. Check config.js"
         );
@@ -73,13 +91,122 @@ function initializeSupabase() {
 
     supabaseClient =
         window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_ANON_KEY
+            url,
+            key
         );
 
     console.log(
         "✅ Supabase initialized"
     );
+
+    console.log(
+        "Supabase URL:",
+        url
+    );
+}
+
+
+// ============================================================
+// TEST PRODUCT IMAGE BUCKET
+// ============================================================
+
+async function testProductImageBucket() {
+
+    if (!supabaseClient) {
+
+        throw new Error(
+            "Supabase client is not initialized."
+        );
+    }
+
+    console.log(
+        "🔍 Checking product-images bucket..."
+    );
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient.storage
+            .from("product-images")
+            .list("", {
+                limit: 1
+            });
+
+    if (error) {
+
+        console.error(
+            "❌ PRODUCT BUCKET ERROR:",
+            error
+        );
+
+        throw new Error(
+            "product-images bucket error: " +
+            (
+                error.message ||
+                "Bucket not accessible."
+            )
+        );
+    }
+
+    console.log(
+        "✅ product-images bucket FOUND",
+        data
+    );
+
+    return true;
+}
+
+
+// ============================================================
+// TEST STORE IMAGE BUCKET
+// ============================================================
+
+async function testStoreImageBucket() {
+
+    if (!supabaseClient) {
+
+        throw new Error(
+            "Supabase client is not initialized."
+        );
+    }
+
+    console.log(
+        "🔍 Checking store-images bucket..."
+    );
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient.storage
+            .from("store-images")
+            .list("", {
+                limit: 1
+            });
+
+    if (error) {
+
+        console.error(
+            "❌ STORE BUCKET ERROR:",
+            error
+        );
+
+        throw new Error(
+            "store-images bucket error: " +
+            (
+                error.message ||
+                "Bucket not accessible."
+            )
+        );
+    }
+
+    console.log(
+        "✅ store-images bucket FOUND",
+        data
+    );
+
+    return true;
 }
 
 
