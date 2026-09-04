@@ -113,7 +113,6 @@ function initializeSupabase() {
 async function testProductImageBucket() {
 
     if (!supabaseClient) {
-
         throw new Error(
             "Supabase client is not initialized."
         );
@@ -134,7 +133,6 @@ async function testProductImageBucket() {
             });
 
     if (error) {
-
         console.error(
             "❌ PRODUCT BUCKET ERROR:",
             error
@@ -156,7 +154,6 @@ async function testProductImageBucket() {
 
     return true;
 }
-
 
 // ============================================================
 // TEST STORE IMAGE BUCKET
