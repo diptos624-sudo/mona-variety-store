@@ -2303,3 +2303,124 @@ console.log(
 // ============================================================
 // END OF APP.JS
 // ============================================================
+/* ============================================================
+   FINAL FIX - CART + OLD PRICE + WHATSAPP
+   ============================================================ */
+
+(function () {
+
+  // ---------- CART DRAWER FIX ----------
+  window.openCart = function () {
+    const drawer = document.getElementById("cartDrawer");
+    const overlay = document.getElementById("cartOverlay");
+
+    if (!drawer) {
+      console.error("cartDrawer not found");
+      return;
+    }
+
+    if (typeof renderCart === "function") {
+      renderCart();
+    }
+
+    drawer.classList.add("open");
+
+    if (overlay) {
+      overlay.classList.add("show");
+    }
+
+    document.body.style.overflow = "hidden";
+  };
+
+
+  window.closeCart = function () {
+    const drawer = document.getElementById("cartDrawer");
+    const overlay = document.getElementById("cartOverlay");
+
+    if (drawer) {
+      drawer.classList.remove("open");
+    }
+
+    if (overlay) {
+      overlay.classList.remove("show");
+    }
+
+    document.body.style.overflow = "";
+  };
+
+
+  // ---------- CART OVERLAY ----------
+  document.addEventListener("click", function (event) {
+
+    if (event.target.id === "cartOverlay") {
+      window.closeCart();
+    }
+
+  });
+
+
+  // ---------- OLD PRICE STRIKE ----------
+  const style = document.createElement("style");
+
+  style.textContent = `
+    .old-price {
+      color: #999 !important;
+      text-decoration: line-through !important;
+      text-decoration-thickness: 1.5px !important;
+      margin-left: 6px;
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    .product-old-price {
+      text-decoration: line-through !important;
+    }
+
+    #cartDrawer {
+      z-index: 1000 !important;
+    }
+
+    #cartOverlay {
+      z-index: 999 !important;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+
+  // ---------- WHATSAPP NUMBER ----------
+  window.getWhatsAppNumber = function () {
+    return "8801913726867";
+  };
+
+
+  // ---------- FORCE WHATSAPP LINKS ----------
+  document.addEventListener("DOMContentLoaded", function () {
+
+    document.querySelectorAll(
+      'a[href*="wa.me"], a[href*="whatsapp"]'
+    ).forEach(function (link) {
+
+      const currentHref = link.getAttribute("href") || "";
+
+      if (
+        currentHref.includes("wa.me") ||
+        currentHref.includes("whatsapp")
+      ) {
+        const parts = currentHref.split("?text=");
+
+        let newHref =
+          "https://wa.me/8801913726867";
+
+        if (parts[1]) {
+          newHref += "?text=" + parts[1];
+        }
+
+        link.setAttribute("href", newHref);
+      }
+
+    });
+
+  });
+
+})();
