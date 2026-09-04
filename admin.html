@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Admin Panel | মনা ভ্যারাইটি স্টোর</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+:root{
+  --gold:#d4af37;
+  --gold2:#b8860b;
+  --black:#090909;
+  --dark:#111;
+  --dark2:#181818;
+  --white:#fff;
+  --text:#222;
+  --muted:#777;
+  --border:#e7e7e7;
+  --danger:#b42318;
+  --success:#16803c;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  font-family:
+    "Noto Sans Bengali",
+    "Segoe UI",
+    Arial,
+    sans-serif;
+  background:#f4f4f4;
+  color:var(--text);
+}
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+.login-wrapper{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  background:
+    radial-gradient(circle at top right,#3b2c05,transparent 35%),
+    linear-gradient(135deg,#050505,#151515,#000);
+}
+
+.login-box{
+  width:100%;
+  max-width:440px;
+  padding:38px 28px;
+  border-radius:24px;
+  background:rgba(255,255,255,.98);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.5);
+}
+
+.login-logo{
+  text-align:center;
+  margin-bottom:28px;
+}
+
+.login-logo h1{
+  margin:0;
+  color:var(--gold2);
+  font-size:29px;
+}
+
+.login-logo p{
+  margin:8px 0 0;
+  color:#777;
+}
+
+.login-crown{
+  width:65px;
+  height:65px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:0 auto 15px;
+  border-radius:50%;
+  background:#111;
+  color:var(--gold);
+  font-size:30px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+/* =========================
+   FORM
+========================= */
+
+.field{
+  margin-bottom:17px;
+}
+
+.field label{
+  display:block;
+  margin-bottom:7px;
+  font-weight:800;
+}
+
+.field input,
+.field select,
+.field textarea{
+  width:100%;
+  padding:13px 14px;
+  border:1px solid #ddd;
+  border-radius:12px;
+  outline:none;
+  background:#fff;
+  transition:.2s;
+}
+
+.field textarea{
+  min-height:105px;
+  resize:vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(212,175,55,.12);
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn{
+  border:0;
+  border-radius:11px;
+  padding:11px 17px;
+  background:#111;
+  color:#fff;
+  font-weight:800;
+  transition:.2s;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+  background:var(--gold2);
+}
+
+.btn-gold{
+  width:100%;
+  background:linear-gradient(135deg,#b8860b,#d4af37);
+  color:#000;
+  padding:14px;
+}
+
+.btn-danger{
+  background:var(--danger);
+}
+
+.btn-secondary{
+  background:#666;
+}
+
+.btn-success{
+  background:var(--success);
+}
+
+.message{
+  margin:10px 0;
+  font-weight:800;
+  color:var(--gold2);
+}
+
+/* =========================
+   ADMIN LAYOUT
+========================= */
+
+.admin-layout{
+  display:none;
+  min-height:100vh;
+}
+
+.sidebar{
+  position:fixed;
+  z-index:1000;
+  left:0;
+  top:0;
+  bottom:0;
+  width:260px;
+  padding:20px 15px;
+  overflow-y:auto;
+  color:#fff;
+  background:
+    linear-gradient(180deg,#090909,#151515);
+  border-right:1px solid rgba(212,175,55,.15);
+}
+
+.brand{
+  text-align:center;
+  padding:12px 5px 24px;
+  border-bottom:1px solid #333;
+  margin-bottom:17px;
+}
+
+.brand-icon{
+  width:58px;
+  height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 10px;
+  border-radius:50%;
+  background:#000;
+  color:var(--gold);
+  font-size:27px;
+  border:1px solid rgba(212,175,55,.35);
+}
+
+.brand h2{
+  margin:0;
+  color:var(--gold);
+  font-size:21px;
+}
+
+.brand small{
+  color:#999;
+}
+
+.nav-btn{
+  width:100%;
+  display:block;
+  text-align:left;
+  margin:7px 0;
+  padding:13px 15px;
+  border:0;
+  border-radius:11px;
+  background:transparent;
+  color:#fff;
+  font-weight:700;
+  transition:.2s;
+}
+
+.nav-btn:hover,
+.nav-btn.active{
+  background:linear-gradient(135deg,#b8860b,#d4af37);
+  color:#000;
+  transform:translateX(3px);
+}
+
+/* =========================
+   MAIN
+========================= */
+
+.main{
+  margin-left:260px;
+  padding:25px;
+}
+
+.topbar{
+  position:sticky;
+  top:15px;
+  z-index:500;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(12px);
+  padding:18px 21px;
+  border-radius:17px;
+  margin-bottom:22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+  border:1px solid rgba(0,0,0,.04);
+}
+
+.topbar h1{
+  margin:0;
+  font-size:25px;
+}
+
+.admin-badge{
+  padding:8px 13px;
+  border-radius:30px;
+  background:#111;
+  color:var(--gold);
+  font-weight:800;
+}
+
+/* =========================
+   SECTIONS
+========================= */
+
+.section{
+  display:none;
+  background:#fff;
+  padding:24px;
+  border-radius:18px;
+  margin-bottom:20px;
+  box-shadow:0 8px 30px rgba(0,0,0,.06);
+}
+
+.section.active{
+  display:block;
+}
+
+.section h2{
+  margin-top:0;
+}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:18px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:15px;
+}
+
+.full{
+  grid-column:1/-1;
+}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:15px;
+}
+
+.checkbox-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+  margin:15px 0;
+}
+
+.checkbox-row label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-weight:700;
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+.dashboard-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+  margin-bottom:22px;
+}
+
+.dashboard-card{
+  padding:20px;
+  border-radius:17px;
+  color:#fff;
+  background:
+    linear-gradient(145deg,#111,#1c1c1c);
+  border:1px solid rgba(212,175,55,.22);
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+
+.dashboard-card small{
+  color:#aaa;
+  display:block;
+  margin-bottom:8px;
+}
+
+.dashboard-card strong{
+  display:block;
+  color:var(--gold);
+  font-size:28px;
+}
+
+.dashboard-card span{
+  color:#aaa;
+  font-size:12px;
+}
+
+/* =========================
+   UPLOAD BOX
+========================= */
+
+.upload-box{
+  padding:18px;
+  border-radius:15px;
+  background:#fafafa;
+  border:1px dashed #caa83a;
+}
+
+.upload-box h3{
+  margin-top:0;
+}
+
+.preview{
+  width:150px;
+  height:100px;
+  display:none;
+  margin-top:12px;
+  object-fit:cover;
+  border-radius:12px;
+  border:2px solid var(--gold);
+}
+
+/* =========================
+   PRODUCT
+========================= */
+
+.search-row{
+  display:grid;
+  grid-template-columns:1fr 220px;
+  gap:10px;
+  margin:18px 0;
+}
+
+.item-card{
+  border:1px solid #e5e5e5;
+  border-radius:15px;
+  padding:16px;
+  margin-bottom:12px;
+  background:#fafafa;
+  transition:.2s;
+}
+
+.item-card:hover{
+  box-shadow:0 8px 25px rgba(0,0,0,.07);
+  transform:translateY(-1px);
+}
+
+.product-row{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.product-img{
+  width:85px;
+  height:85px;
+  object-fit:cover;
+  border-radius:12px;
+  background:#eee;
+}
+
+.product-info{
+  flex:1;
+}
+
+.item-meta{
+  color:#666;
+  font-size:14px;
+}
+
+/* =========================
+   PAYMENT
+========================= */
+
+.payment-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  align-items:center;
+  margin-bottom:15px;
+  padding:17px;
+  border:1px solid #eee;
+  border-radius:14px;
+  background:#fafafa;
+}
+
+/* =========================
+   ORDERS
+========================= */
+
+.order-card{
+  border:1px solid #ddd;
+  border-radius:17px;
+  padding:18px;
+  margin-bottom:15px;
+  background:#fff;
+  box-shadow:0 5px 20px rgba(0,0,0,.04);
+}
+
+.order-summary{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:flex-start;
+}
+
+.order-top{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:flex-start;
+  border-bottom:1px solid #eee;
+  padding-bottom:12px;
+  margin-bottom:12px;
+}
+
+.order-top h3{
+  margin:0 0 5px;
+}
+
+.customer-info p{
+  margin:7px 0;
+}
+
+.order-item{
+  display:flex;
+  justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px dashed #ddd;
+}
+
+.order-total,
+.order-grand-total{
+  display:flex;
+  justify-content:space-between;
+  padding-top:8px;
+}
+
+.order-grand-total{
+  margin-top:8px;
+  padding-top:12px;
+  border-top:2px solid #111;
+  font-size:19px;
+}
+
+.order-note{
+  margin-top:12px;
+  padding:12px;
+  background:#fff8df;
+  border-radius:9px;
+}
+
+.order-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:15px;
+}
+
+.order-details{
+  display:none;
+  margin-top:18px;
+  padding-top:18px;
+  border-top:1px solid #eee;
+}
+
+.order-card.expanded .order-details{
+  display:block;
+}
+
+.order-toggle{
+  display:inline-block;
+  margin-top:14px;
+  color:var(--gold2);
+  font-weight:800;
+  cursor:pointer;
+}
+
+.status-badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:30px;
+  background:#eee;
+  font-size:12px;
+  font-weight:800;
+}
+
+.status-pending{
+  background:#fff0b3;
+  color:#805f00;
+}
+
+.status-confirmed{
+  background:#dff4ff;
+  color:#00658a;
+}
+
+.status-processing{
+  background:#e8e0ff;
+  color:#53339a;
+}
+
+.status-shipped{
+  background:#dff7e8;
+  color:#13743a;
+}
+
+.status-delivered{
+  background:#c9f5d8;
+  color:#08652b;
+}
+
+.status-cancelled{
+  background:#ffe0e0;
+  color:#a00000;
+}
+
+/* =========================
+   EMPTY
+========================= */
+
+.empty-box{
+  text-align:center;
+  padding:40px 15px;
+  color:#777;
+  background:#fafafa;
+  border-radius:14px;
+}
+
+/* =========================
+   TOAST
+========================= */
+
+.notification-toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:9999;
+  min-width:280px;
+  max-width:360px;
+  padding:17px;
+  border-radius:15px;
+  background:#111;
+  color:#fff;
+  border:1px solid var(--gold);
+  box-shadow:0 15px 50px rgba(0,0,0,.4);
+  animation:toast .3s ease;
+}
+
+@keyframes toast{
+  from{
+    opacity:0;
+    transform:translateY(25px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:1000px){
+
+  .dashboard-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+}
+
+@media(max-width:800px){
+
+  .sidebar{
+    position:static;
+    width:100%;
+  }
+
+  .admin-layout{
+    display:block;
+  }
+
+  .main{
+    margin-left:0;
+    padding:15px;
+  }
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .full{
+    grid-column:auto;
+  }
+
+  .search-row{
+    grid-template-columns:1fr;
+  }
+
+  .payment-row{
+    grid-template-columns:1fr;
+  }
+
+  .topbar{
+    position:static;
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .section-head{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .order-summary{
+    flex-direction:column;
+  }
+
+}
+
+@media(max-width:500px){
+
+  .dashboard-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .dashboard-card{
+    padding:15px;
+  }
+
+  .dashboard-card strong{
+    font-size:22px;
+  }
+
+  .section{
+    padding:17px;
+  }
+
+  .product-row{
+    align-items:flex-start;
+  }
+
+  .product-img{
+    width:65px;
+    height:65px;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+
+<section id="loginSection" class="login-wrapper">
+
+  <div class="login-box">
+
+    <div class="login-logo">
+
+      <div class="login-crown">👑</div>
+
+      <h1>মনা ভ্যারাইটি স্টোর</h1>
+
+      <p>Premium Admin Panel</p>
+
+    </div>
+
+    <div class="field">
+
+      <label for="loginEmail">Admin Email</label>
+
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="Admin Email"
+        autocomplete="email"
+      >
+
+    </div>
+
+    <div class="field">
+
+      <label for="loginPassword">Password</label>
+
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+      >
+
+    </div>
+
+    <button
+      id="loginBtn"
+      class="btn btn-gold"
+    >
+      🔐 Login
+    </button>
+
+    <div
+      id="loginMessage"
+      class="message"
+    ></div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     ADMIN PANEL
+===================================================== -->
+
+<div id="adminPanel" class="admin-layout">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+  <div class="brand">
+
+    <div class="brand-icon">👑</div>
+
+    <h2>মনা ভ্যারাইটি স্টোর</h2>
+
+    <small>Premium Admin</small>
+
+  </div>
+
+
+  <button
+    class="nav-btn active"
+    data-section="storeSection"
+  >
+    🏪 Store Settings
+  </button>
+
+
+  <button
+    class="nav-btn"
+    data-section="categorySection"
+  >
+    📂 Categories
+  </button>
+
+
+  <button
+    class="nav-btn"
+    data-section="productSection"
+  >
+    📦 Products
+  </button>
+
+
+  <button
+    class="nav-btn"
+    data-section="paymentSection"
+  >
+    💳 Payments
+  </button>
+
+
+  <button
+    class="nav-btn"
+    data-section="orderSection"
+  >
+    🛒 Orders
+  </button>
+
+
+  <button
+    id="viewStoreBtn"
+    class="nav-btn"
+  >
+    🌐 View Store
+  </button>
+
+
+  <button
+    id="logoutBtn"
+    class="nav-btn"
+  >
+    🚪 Logout
+  </button>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+
+<div class="topbar">
+
+  <div>
+
+    <h1>Admin Dashboard</h1>
+
+    <small>
+      মনা ভ্যারাইটি স্টোর পরিচালনা করুন
+    </small>
+
+  </div>
+
+  <div class="admin-badge">
+    👑 ADMIN
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     STORE SETTINGS
+===================================================== -->
+
+<section
+  id="storeSection"
+  class="section active"
+>
+
+  <div class="section-head">
+
+    <div>
+
+      <h2>🏪 Store Settings</h2>
+
+      <p>
+        দোকানের তথ্য, যোগাযোগ ও ডেলিভারি সেটিংস
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="storeMessage"
+    class="message"
+  ></div>
+
+
+  <div class="grid">
+
+
+    <div class="field">
+
+      <label>Store Name</label>
+
+      <input
+        id="storeName"
+        type="text"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Tagline</label>
+
+      <input
+        id="tagline"
+        type="text"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Phone</label>
+
+      <input
+        id="phone"
+        type="text"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>WhatsApp</label>
+
+      <input
+        id="whatsapp"
+        type="text"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Facebook URL</label>
+
+      <input
+        id="facebookUrl"
+        type="url"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>TikTok URL</label>
+
+      <input
+        id="tiktokUrl"
+        type="url"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Logo URL</label>
+
+      <input
+        id="logoUrl"
+        type="url"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Founding Year</label>
+
+      <input
+        id="foundingYear"
+        type="number"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Proprietor Name</label>
+
+      <input
+        id="proprietorName"
+        type="text"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Management Names</label>
+
+      <input
+        id="managementNames"
+        type="text"
+      >
+
+    </div>
+
+
+    <div class="field full">
+
+      <label>Address</label>
+
+      <textarea id="address"></textarea>
+
+    </div>
+
+
+    <div class="field full">
+
+      <label>Google Maps URL</label>
+
+      <input
+        id="mapUrl"
+        type="url"
+      >
+
+    </div>
+
+
+    <div class="field full">
+
+      <label>Opening Hours</label>
+
+      <textarea id="openingHours"></textarea>
+
+    </div>
+
+
+    <div class="field full">
+
+      <label>About Store</label>
+
+      <textarea id="aboutText"></textarea>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Delivery Charge</label>
+
+      <input
+        id="deliveryCharge"
+        type="number"
+        step="0.01"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Free Delivery Minimum</label>
+
+      <input
+        id="freeDeliveryMin"
+        type="number"
+        step="0.01"
+      >
+
+    </div>
+
+
+  </div>
+
+
+  <!-- LOGO UPLOAD -->
+
+  <div class="upload-box">
+
+    <h3>🏪 Store Logo</h3>
+
+    <p>
+      এখান থেকে দোকানের Logo আপলোড করতে পারবে।
+    </p>
+
+    <input
+      id="storeLogoUpload"
+      type="file"
+      accept="image/*"
+    >
+
+    <img
+      id="storeLogoPreview"
+      class="preview"
+      alt="Logo Preview"
+    >
+
+  </div>
+
+
+  <!-- BANNER -->
+
+  <div
+    class="upload-box"
+    style="margin-top:15px"
+  >
+
+    <h3>🖼️ Store Banner</h3>
+
+    <p>
+      Homepage banner আপলোড করার জায়গা।
+    </p>
+
+    <input
+      id="storeBannerUpload"
+      type="file"
+      accept="image/*"
+    >
+
+    <img
+      id="storeBannerPreview"
+      class="preview"
+      alt="Banner Preview"
+    >
+
+  </div>
+
+
+  <div class="actions">
+
+    <button
+      id="saveStoreBtn"
+      class="btn"
+    >
+      💾 Save Store Settings
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     CATEGORY
+===================================================== -->
+
+<section
+  id="categorySection"
+  class="section"
+>
+
+  <h2>📂 Category Manager</h2>
+
+  <div
+    id="categoryMessage"
+    class="message"
+  ></div>
+
+
+  <div class="grid">
+
+    <div class="field">
+
+      <label>Category Name</label>
+
+      <input
+        id="categoryName"
+        type="text"
+        placeholder="যেমন: মুদি পণ্য"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Icon</label>
+
+      <input
+        id="categoryIcon"
+        type="text"
+        placeholder="🛒"
+      >
+
+    </div>
+
+  </div>
+
+
+  <div class="actions">
+
+    <button
+      id="saveCategoryBtn"
+      class="btn"
+    >
+      ➕ Add Category
+    </button>
+
+  </div>
+
+
+  <div
+    id="categoryList"
+    class="category-list"
+  ></div>
+
+</section>
+
+
+<!-- =====================================================
+     PRODUCT
+===================================================== -->
+
+<section
+  id="productSection"
+  class="section"
+>
+
+  <div class="section-head">
+
+    <div>
+
+      <h2>📦 Premium Product Manager</h2>
+
+      <p>
+        Product, price, stock, image ও visibility নিয়ন্ত্রণ করুন।
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="productMessage"
+    class="message"
+  ></div>
+
+
+  <input
+    id="editingProductId"
+    type="hidden"
+  >
+
+
+  <div class="grid">
+
+
+    <div class="field">
+
+      <label>Product Name</label>
+
+      <input
+        id="productName"
+        type="text"
+        placeholder="Product Name"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Category</label>
+
+      <select id="productCategory">
+
+        <option value="">
+          Select Category
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Price</label>
+
+      <input
+        id="productPrice"
+        type="number"
+        step="0.01"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Old Price</label>
+
+      <input
+        id="productOldPrice"
+        type="number"
+        step="0.01"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Stock</label>
+
+      <input
+        id="productStock"
+        type="number"
+        value="0"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>Image URL</label>
+
+      <input
+        id="productImage"
+        type="url"
+        placeholder="https://..."
+      >
+
+    </div>
+
+
+    <div class="field full">
+
+      <label>Product Image Upload</label>
+
+      <div class="upload-box">
+
+        <input
+          id="productImageUpload"
+          type="file"
+          accept="image/*"
+        >
+
+        <img
+          id="productImagePreview"
+          class="preview"
+          alt="Product Preview"
+        >
+
+      </div>
+
+    </div>
+
+
+    <div class="field full">
+
+      <label>Description</label>
+
+      <textarea
+        id="productDescription"
+        placeholder="Product সম্পর্কে লিখুন..."
+      ></textarea>
+
+    </div>
+
+  </div>
+
+
+  <div class="checkbox-row">
+
+    <label>
+      <input
+        id="productActive"
+        type="checkbox"
+        checked
+      >
+      Active
+    </label>
+
+
+    <label>
+      <input
+        id="productFeatured"
+        type="checkbox"
+      >
+      Featured
+    </label>
+
+
+    <label>
+      <input
+        id="productNew"
+        type="checkbox"
+      >
+      New
+    </label>
+
+
+    <label>
+      <input
+        id="productBestSeller"
+        type="checkbox"
+      >
+      Best Seller
+    </label>
+
+
+    <label>
+      <input
+        id="productDiscount"
+        type="checkbox"
+      >
+      Discount
+    </label>
+
+  </div>
+
+
+  <div class="actions">
+
+    <button
+      id="saveProductBtn"
+      class="btn"
+    >
+      💾 Save Product
+    </button>
+
+
+    <button
+      id="cancelProductBtn"
+      class="btn btn-secondary"
+      type="button"
+    >
+      ✖ Cancel
+    </button>
+
+  </div>
+
+
+  <div class="search-row">
+
+    <input
+      id="productSearch"
+      type="search"
+      placeholder="🔎 Product search..."
+    >
+
+
+    <select id="productFilterCategory">
+
+      <option value="">
+        সব Category
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <div
+    id="productList"
+    class="product-list"
+  ></div>
+
+</section>
+
+
+<!-- =====================================================
+     PAYMENT
+===================================================== -->
+
+<section
+  id="paymentSection"
+  class="section"
+>
+
+  <h2>💳 Payment Manager</h2>
+
+  <p>
+    কাস্টমার কোন কোন মাধ্যমে পেমেন্ট করতে পারবে
+    তা এখান থেকে নিয়ন্ত্রণ করুন।
+  </p>
+
+
+  <div
+    id="paymentMessage"
+    class="message"
+  ></div>
+
+
+  <div
+    id="paymentList"
+    class="payment-list"
+  ></div>
+
+
+  <div class="actions">
+
+    <button
+      id="savePaymentsBtn"
+      class="btn"
+    >
+      💾 Save Payment Settings
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     ORDERS
+===================================================== -->
+
+<section
+  id="orderSection"
+  class="section"
+>
+
+
+  <div class="section-head">
+
+    <div>
+
+      <h2>🛒 Premium Order Manager</h2>
+
+      <p>
+        অর্ডার দেখুন, খুঁজুন, status পরিবর্তন করুন এবং invoice print করুন।
+      </p>
+
+    </div>
+
+
+    <div class="actions">
+
+      <button
+        id="enableNotificationBtn"
+        class="btn"
+      >
+        🔔 Notification
+      </button>
+
+
+      <button
+        id="refreshOrdersBtn"
+        class="btn"
+      >
+        🔄 Refresh
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ORDER DASHBOARD -->
+
+  <div
+    id="premiumOrderStats"
+    class="dashboard-grid"
+  >
+
+    <div class="dashboard-card">
+
+      <small>মোট অর্ডার</small>
+
+      <strong id="statTotalOrders">
+        0
+      </strong>
+
+      <span>All Orders</span>
+
+    </div>
+
+
+    <div class="dashboard-card">
+
+      <small>Pending</small>
+
+      <strong id="statPendingOrders">
+        0
+      </strong>
+
+      <span>নতুন অর্ডার</span>
+
+    </div>
+
+
+    <div class="dashboard-card">
+
+      <small>Confirmed</small>
+
+      <strong id="statConfirmedOrders">
+        0
+      </strong>
+
+      <span>Confirmed Orders</span>
+
+    </div>
+
+
+    <div class="dashboard-card">
+
+      <small>Delivered</small>
+
+      <strong id="statDeliveredOrders">
+        0
+      </strong>
+
+      <span>Completed</span>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="ordersMessage"
+    class="message"
+  ></div>
+
+
+  <div class="search-row">
+
+    <input
+      id="orderSearch"
+      type="search"
+      placeholder="🔎 নাম / ফোন / Order ID দিয়ে খুঁজুন..."
+    >
+
+
+    <select id="orderStatusFilter">
+
+      <option value="">
+        সব অর্ডার
+      </option>
+
+
+      <option value="pending">
+        Pending
+      </option>
+
+
+      <option value="confirmed">
+        Confirmed
+      </option>
+
+
+      <option value="processing">
+        Processing
+      </option>
+
+
+      <option value="shipped">
+        Shipped
+      </option>
+
+
+      <option value="delivered">
+        Delivered
+      </option>
+
+
+      <option value="cancelled">
+        Cancelled
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <div
+    id="ordersList"
+    class="orders-list"
+  ></div>
+
+</section>
+
+
+</main>
+
+</div>
+
+
+<!-- =====================================================
+     SCRIPTS
+===================================================== -->
+
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+</script>
+
+<script src="config.js"></script>
+
+<script src="admin.js"></script>
+
+
+<script>
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function(){
+
+    const navButtons =
+      document.querySelectorAll(
+        ".nav-btn[data-section]"
+      );
+
+    const sections =
+      document.querySelectorAll(
+        ".section"
+      );
+
+
+    navButtons.forEach(
+      function(button){
+
+        button.addEventListener(
+          "click",
+          function(){
+
+            const target =
+              this.getAttribute(
+                "data-section"
+              );
+
+
+            navButtons.forEach(
+              function(btn){
+
+                btn.classList.remove(
+                  "active"
+                );
+
+              }
+            );
+
+
+            this.classList.add(
+              "active"
+            );
+
+
+            sections.forEach(
+              function(section){
+
+                section.classList.remove(
+                  "active"
+                );
+
+              }
+            );
+
+
+            const targetSection =
+              document.getElementById(
+                target
+              );
+
+
+            if(targetSection){
+
+              targetSection.classList.add(
+                "active"
+              );
+
+            }
+
+
+            if(
+              target === "orderSection" &&
+              typeof loadOrders === "function"
+            ){
+
+              loadOrders();
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+    const viewStoreBtn =
+      document.getElementById(
+        "viewStoreBtn"
+      );
+
+
+    if(viewStoreBtn){
+
+      viewStoreBtn.addEventListener(
+        "click",
+        function(){
+
+          window.open(
+            "index.html",
+            "_blank"
+          );
+
+        }
+      );
+
+    }
+
+  }
+);
+
+</script>
+
+</body>
+</html>

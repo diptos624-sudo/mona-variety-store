@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>মনা ভ্যারাইটি স্টোর</title>
+
+  <meta
+    name="description"
+    content="মনা ভ্যারাইটি স্টোর — আপনাদের আস্থার সাথে ৭১ বছর"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+
+    body {
+      font-family:
+        "Noto Sans Bengali",
+        sans-serif;
+
+      background: #f7f7f7;
+
+      color: #151515;
+
+      line-height: 1.6;
+    }
+
+
+    button,
+    input,
+    textarea {
+      font-family: inherit;
+    }
+
+
+    button {
+      cursor: pointer;
+    }
+
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+
+    .container {
+      width: 92%;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+
+    /* HEADER */
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+
+      background: #111;
+
+      color: white;
+
+      border-bottom:
+        1px solid #d4af37;
+    }
+
+
+    .header-inner {
+      min-height: 70px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+
+    .brand {
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+      min-width: 0;
+    }
+
+
+    #headerLogo {
+      width: 48px;
+      height: 48px;
+
+      border-radius: 50%;
+
+      object-fit: cover;
+
+      border: 2px solid #d4af37;
+
+      background: white;
+    }
+
+
+    .brand-text {
+      min-width: 0;
+    }
+
+
+    #headerStoreName {
+      color: #d4af37;
+
+      font-size: 18px;
+
+      font-weight: 800;
+
+      white-space: nowrap;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+    }
+
+
+    #headerTagline {
+      font-size: 11px;
+
+      color: #ddd;
+    }
+
+
+    .header-actions {
+      display: flex;
+
+      gap: 8px;
+    }
+
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+
+      border: 1px solid #d4af37;
+
+      border-radius: 50%;
+
+      background: #181818;
+
+      color: white;
+
+      font-size: 19px;
+
+      position: relative;
+    }
+
+
+    #cartCount {
+      position: absolute;
+
+      top: -5px;
+      right: -4px;
+
+      min-width: 20px;
+      height: 20px;
+
+      border-radius: 50%;
+
+      background: #d4af37;
+
+      color: #111;
+
+      font-size: 11px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      font-weight: 800;
+    }
+
+
+    /* HERO */
+
+    .hero {
+      background:
+        linear-gradient(
+          135deg,
+          #111,
+          #242424
+        );
+
+      color: white;
+
+      padding: 55px 0;
+    }
+
+
+    .hero-content {
+      text-align: center;
+
+      max-width: 700px;
+
+      margin: auto;
+    }
+
+
+    #heroStoreName {
+      color: #d4af37;
+
+      font-size: 32px;
+
+      font-weight: 800;
+
+      margin-bottom: 8px;
+    }
+
+
+    #heroTagline {
+      color: #eee;
+
+      font-size: 15px;
+
+      margin-bottom: 25px;
+    }
+
+
+    .hero-buttons {
+      display: flex;
+
+      justify-content: center;
+
+      gap: 10px;
+
+      flex-wrap: wrap;
+    }
+
+
+    .gold-btn {
+      border: none;
+
+      background: #d4af37;
+
+      color: #111;
+
+      padding: 12px 22px;
+
+      border-radius: 30px;
+
+      font-weight: 800;
+
+      transition: .2s;
+    }
+
+
+    .gold-btn:hover {
+      transform: translateY(-2px);
+    }
+
+
+    .dark-btn {
+      border: 1px solid #d4af37;
+
+      background: transparent;
+
+      color: white;
+
+      padding: 11px 22px;
+
+      border-radius: 30px;
+
+      font-weight: 700;
+    }
+
+
+    /* SEARCH */
+
+    .search-section {
+      padding: 25px 0 10px;
+    }
+
+
+    .search-box {
+      display: flex;
+
+      gap: 8px;
+
+      max-width: 700px;
+
+      margin: auto;
+    }
+
+
+    #productSearchInput {
+      flex: 1;
+
+      border: 1px solid #ddd;
+
+      background: white;
+
+      border-radius: 30px;
+
+      padding: 13px 18px;
+
+      outline: none;
+
+      font-size: 14px;
+    }
+
+
+    #searchBtn {
+      border: none;
+
+      background: #111;
+
+      color: #d4af37;
+
+      border-radius: 30px;
+
+      padding: 0 20px;
+
+      font-weight: 700;
+    }
+
+
+    /* SECTION */
+
+    .section {
+      padding: 25px 0;
+    }
+
+
+    .section-title {
+      text-align: center;
+
+      margin-bottom: 20px;
+    }
+
+
+    .section-title h2 {
+      font-size: 25px;
+
+      font-weight: 800;
+    }
+
+
+    .section-title span {
+      color: #d4af37;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<!-- HEADER -->
+
+<header>
+
+  <div class="container header-inner">
+
+    <a
+      href="#"
+      class="brand"
+    >
+
+      <img
+        id="headerLogo"
+        src=""
+        alt="মনা ভ্যারাইটি স্টোর"
+      >
+
+      <div class="brand-text">
+
+        <div id="headerStoreName">
+          মনা ভ্যারাইটি স্টোর
+        </div>
+
+        <div id="headerTagline">
+          আপনাদের আস্থার সাথে ৭১ বছর
+        </div>
+
+      </div>
+
+    </a>
+
+
+    <div class="header-actions">
+
+      <button
+        id="headerSearchBtn"
+        class="icon-btn"
+        type="button"
+        onclick="document.getElementById('productSearchInput')?.focus()"
+      >
+        🔍
+      </button>
+
+
+      <button
+        id="cartBtn"
+        class="icon-btn"
+        type="button"
+      >
+
+        🛒
+
+        <span id="cartCount">
+          0
+        </span>
+
+      </button>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+  <div class="container hero-content">
+
+    <h1 id="heroStoreName">
+      মনা ভ্যারাইটি স্টোর
+    </h1>
+
+
+    <p id="heroTagline">
+      আপনাদের আস্থার সাথে ৭১ বছর
+    </p>
+
+
+    <div class="hero-buttons">
+
+      <button
+        id="shopNowBtn"
+        class="gold-btn"
+        type="button"
+      >
+        🛍️ এখনই কেনাকাটা করুন
+      </button>
+
+
+      <a
+        id="heroWhatsapp"
+        class="dark-btn"
+        href="https://wa.me/8801913726867"
+        target="_blank"
+      >
+        💬 WhatsApp
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- SEARCH -->
+
+<section class="search-section">
+
+  <div class="container">
+
+    <div class="search-box">
+
+      <input
+        id="productSearchInput"
+        type="search"
+        placeholder="পণ্য খুঁজুন..."
+      >
+
+      <button
+        id="searchBtn"
+        type="button"
+      >
+        খুঁজুন
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- PART 1 END --><!-- PART 2: CATEGORY -->
+
+<section class="section" id="categorySection">
+  <div class="container">
+
+    <div class="section-heading">
+      <span class="section-kicker">CATEGORIES</span>
+      <h2>ক্যাটাগরি</h2>
+      <p>আপনার প্রয়োজনীয় পণ্যটি সহজেই খুঁজে নিন</p>
+    </div>
+
+    <div id="categoryList" class="category-list">
+      <button class="category-btn active" data-category="all">
+        সব পণ্য
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .category-list {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 5px 2px 15px;
+    scrollbar-width: none;
+  }
+
+  .category-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-btn {
+    flex: 0 0 auto;
+    border: 1px solid #d8c28a;
+    background: #fff;
+    color: #222;
+    padding: 11px 18px;
+    border-radius: 30px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.25s ease;
+  }
+
+  .category-btn:hover,
+  .category-btn.active {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+  }
+</style>
+
+<!-- PART 2 END --><!-- PART 3: PRODUCTS -->
+
+<section class="section" id="featuredSection">
+  <div class="container">
+
+    <div class="section-heading">
+      <span class="section-kicker">FEATURED</span>
+      <h2>বিশেষ পণ্য</h2>
+      <p>আমাদের বাছাই করা জনপ্রিয় পণ্য</p>
+    </div>
+
+    <div id="featuredProducts" class="product-grid"></div>
+
+  </div>
+</section>
+
+
+<section class="section" id="productsSection">
+  <div class="container">
+
+    <div class="section-heading">
+      <span class="section-kicker">SHOP</span>
+      <h2 id="productsTitle">সব পণ্য</h2>
+      <p>মনা ভ্যারাইটি স্টোরের সকল পণ্য</p>
+    </div>
+
+    <div id="productGrid" class="product-grid"></div>
+
+  </div>
+</section>
+
+
+<style>
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .product-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  }
+
+  .product-image-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #f7f7f7;
+    overflow: hidden;
+  }
+
+  .product-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .product-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: #111;
+    color: #fff;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+  }
+
+  .product-info {
+    padding: 12px;
+  }
+
+  .product-info h3 {
+    margin: 0 0 7px;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .product-price {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+
+  .product-old-price {
+    color: #999;
+    text-decoration: line-through;
+    font-size: 12px;
+    margin-left: 5px;
+    font-weight: 400;
+  }
+
+  .stock-text {
+    font-size: 12px;
+    color: #777;
+  }
+
+  .empty-products {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px;
+    color: #777;
+    background: #fff;
+    border-radius: 16px;
+  }
+
+  @media (min-width: 600px) {
+    .product-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 900px) {
+    .product-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+  }
+</style>
+
+<!-- PART 3 END --><!-- PART 4: CART + CHECKOUT -->
+
+<div id="cartOverlay" class="cart-overlay"></div>
+
+<aside id="cartDrawer" class="cart-drawer">
+
+  <div class="cart-header">
+    <div>
+      <h2>আপনার কার্ট</h2>
+      <p id="cartSubtitle">আপনার নির্বাচিত পণ্য</p>
+    </div>
+
+    <button id="closeCartBtn" class="close-btn" type="button">
+      ×
+    </button>
+  </div>
+
+  <div id="cartItems" class="cart-items">
+    <div class="empty-products">
+      কার্টে এখনো কোনো পণ্য নেই।
+    </div>
+  </div>
+
+  <div class="cart-summary">
+
+    <div class="summary-row">
+      <span>পণ্যের মূল্য</span>
+      <strong>৳<span id="cartSubtotal">0</span></strong>
+    </div>
+
+    <div class="summary-row">
+      <span>ডেলিভারি</span>
+      <strong>৳<span id="cartDelivery">0</span></strong>
+    </div>
+
+    <div class="summary-row total-row">
+      <span>সর্বমোট</span>
+      <strong>৳<span id="cartTotal">0</span></strong>
+    </div>
+
+    <button id="checkoutBtn" class="primary-btn" type="button">
+      অর্ডার করুন
+    </button>
+
+  </div>
+
+</aside>
+
+
+<!-- CHECKOUT MODAL -->
+
+<div id="checkoutModal" class="modal">
+  <div class="modal-box checkout-box">
+
+    <button id="closeCheckoutBtn" class="close-btn" type="button">
+      ×
+    </button>
+
+    <h2>অর্ডার সম্পন্ন করুন</h2>
+    <p>আপনার তথ্যগুলো দিন</p>
+
+    <div id="checkoutMessage"></div>
+
+    <div class="form-group">
+      <label for="customerName">আপনার নাম *</label>
+      <input
+        id="customerName"
+        type="text"
+        placeholder="আপনার নাম লিখুন"
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="customerPhone">মোবাইল নম্বর *</label>
+      <input
+        id="customerPhone"
+        type="tel"
+        placeholder="01XXXXXXXXX"
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="customerAddress">ডেলিভারি ঠিকানা *</label>
+      <textarea
+        id="customerAddress"
+        rows="3"
+        placeholder="সম্পূর্ণ ঠিকানা লিখুন"
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="customerNote">অতিরিক্ত নোট</label>
+      <textarea
+        id="customerNote"
+        rows="2"
+        placeholder="কোনো বিশেষ নির্দেশনা থাকলে লিখুন"
+      ></textarea>
+    </div>
+
+    <div class="checkout-payment">
+      <h3>পেমেন্ট মাধ্যম</h3>
+      <div id="checkoutPaymentMethods"></div>
+    </div>
+
+    <div class="checkout-order-summary">
+
+      <h3>অর্ডারের বিবরণ</h3>
+
+      <div id="checkoutSummary"></div>
+
+      <div class="summary-row">
+        <span>পণ্যের মূল্য</span>
+        <strong>৳<span id="checkoutSubtotal">0</span></strong>
+      </div>
+
+      <div class="summary-row">
+        <span>ডেলিভারি</span>
+        <strong>৳<span id="checkoutDelivery">0</span></strong>
+      </div>
+
+      <div class="summary-row total-row">
+        <span>সর্বমোট</span>
+        <strong>৳<span id="checkoutTotal">0</span></strong>
+      </div>
+
+    </div>
+
+    <button id="placeOrderBtn" class="primary-btn" type="button">
+      অর্ডার কনফার্ম করুন
+    </button>
+
+  </div>
+</div>
+
+
+<style>
+
+  .cart-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 900;
+    display: none;
+  }
+
+  .cart-overlay.show {
+    display: block;
+  }
+
+  .cart-drawer {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: min(420px, 92%);
+    height: 100vh;
+    background: #fff;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .cart-drawer.open {
+    right: 0;
+  }
+
+  .cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .cart-header h2 {
+    margin: 0 0 5px;
+  }
+
+  .cart-header p {
+    margin: 0;
+    color: #777;
+    font-size: 13px;
+  }
+
+  .close-btn {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: #f3f3f3;
+    font-size: 25px;
+    cursor: pointer;
+  }
+
+  .cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+  }
+
+  .cart-summary {
+    padding: 18px;
+    border-top: 1px solid #eee;
+    background: #fff;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .total-row {
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+    margin-top: 12px;
+    font-size: 17px;
+  }
+
+  .primary-btn {
+    width: 100%;
+    border: 0;
+    background: #111;
+    color: #fff;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.25s ease;
+  }
+
+  .primary-btn:hover {
+    opacity: 0.85;
+  }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 1100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    overflow-y: auto;
+  }
+
+  .modal.show {
+    display: flex;
+  }
+
+  .modal-box {
+    position: relative;
+    width: min(600px, 100%);
+    max-height: 92vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 18px;
+    padding: 22px;
+  }
+
+  .modal-box h2 {
+    margin: 0 0 5px;
+  }
+
+  .modal-box > p {
+    margin-top: 0;
+    color: #777;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: #111;
+  }
+
+  .checkout-payment,
+  .checkout-order-summary {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f8f8;
+    border-radius: 12px;
+  }
+
+  .checkout-payment h3,
+  .checkout-order-summary h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+  }
+
+  #checkoutPaymentMethods {
+    display: grid;
+    gap: 10px;
+  }
+
+  .payment-option {
+    display: block;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  @media (min-width: 600px) {
+    .modal {
+      padding: 25px;
+    }
+
+    .modal-box {
+      padding: 28px;
+    }
+  }
+
+</style>
+
+<!-- PART 4 END --><!-- PART 5: PRODUCT MODAL + SUCCESS MODAL -->
+
+<div id="productModal" class="modal">
+
+  <div class="modal-box">
+
+    <button
+      id="closeProductModalBtn"
+      class="close-btn"
+      type="button"
+    >
+      ×
+    </button>
+
+    <div id="productModalContent"></div>
+
+  </div>
+
+</div>
+
+
+<div id="successModal" class="modal">
+
+  <div class="modal-box success-box">
+
+    <div class="success-icon">✓</div>
+
+    <h2>অর্ডার সফল হয়েছে!</h2>
+
+    <p>
+      আপনার অর্ডারটি আমরা পেয়েছি।
+    </p>
+
+    <div class="success-order">
+      <span>অর্ডার ID</span>
+      <strong id="successOrderId">-</strong>
+    </div>
+
+    <a
+      id="successWhatsappBtn"
+      class="primary-btn success-whatsapp"
+      href="#"
+      target="_blank"
+      rel="noopener"
+    >
+      WhatsApp-এ অর্ডার পাঠান
+    </a>
+
+    <button
+      id="continueShoppingBtn"
+      class="secondary-btn"
+      type="button"
+    >
+      কেনাকাটা চালিয়ে যান
+    </button>
+
+  </div>
+
+</div>
+
+
+<style>
+
+  .success-box {
+    text-align: center;
+    max-width: 420px;
+  }
+
+  .success-icon {
+    width: 70px;
+    height: 70px;
+    margin: 5px auto 15px;
+    border-radius: 50%;
+    background: #111;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    font-weight: 700;
+  }
+
+  .success-box h2 {
+    margin-bottom: 8px;
+  }
+
+  .success-box p {
+    color: #777;
+  }
+
+  .success-order {
+    margin: 20px 0;
+    padding: 14px;
+    border-radius: 10px;
+    background: #f5f5f5;
+  }
+
+  .success-order span {
+    display: block;
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 5px;
+  }
+
+  .success-order strong {
+    font-size: 14px;
+    word-break: break-all;
+  }
+
+  .success-whatsapp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+  }
+
+  .secondary-btn {
+    width: 100%;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #111;
+    padding: 13px 18px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  #productModalContent img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 14px;
+    background: #f7f7f7;
+    margin-bottom: 15px;
+  }
+
+  .modal-product-title {
+    font-size: 22px;
+    margin: 0 0 8px;
+  }
+
+  .modal-product-price {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .modal-product-description {
+    color: #666;
+    line-height: 1.7;
+    margin-bottom: 18px;
+  }
+
+  .modal-add-btn {
+    width: 100%;
+    border: 0;
+    background: #111;
+    color: #fff;
+    padding: 14px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+</style>
+
+<!-- PART 5 END --><!-- PART 6: FOOTER + SCRIPTS -->
+
+<footer class="site-footer">
+
+  <div class="container">
+
+    <div class="footer-main">
+
+      <div class="footer-brand">
+        <h2 id="footerStoreName">মনা ভ্যারাইটি স্টোর</h2>
+        <p id="footerTagline">
+          আপনাদের আস্থার সাথে ৭১ বছর
+        </p>
+      </div>
+
+      <div class="footer-info">
+
+        <div class="footer-item">
+          <strong>📞 ফোন</strong>
+          <a id="footerPhone" href="tel:01913726867">
+            01913726867
+          </a>
+        </div>
+
+        <div class="footer-item">
+          <strong>📍 ঠিকানা</strong>
+          <span id="footerAddress">
+            আমাদের ঠিকানা
+          </span>
+        </div>
+
+      </div>
+
+      <div class="footer-social">
+
+        <a
+          id="footerFacebook"
+          href="#"
+          target="_blank"
+          rel="noopener"
+        >
+          Facebook
+        </a>
+
+        <a
+          id="footerTikTok"
+          href="#"
+          target="_blank"
+          rel="noopener"
+        >
+          TikTok
+        </a>
+
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+
+      <p>
+        © <span id="footerYear"></span>
+        মনা ভ্যারাইটি স্টোর
+      </p>
+
+      <p>
+        All Rights Reserved.
+      </p>
+
+    </div>
+
+  </div>
+
+</footer>
+
+
+<style>
+
+  .site-footer {
+    margin-top: 50px;
+    background: #111;
+    color: #fff;
+    padding: 40px 0 20px;
+  }
+
+  .footer-main {
+    display: grid;
+    gap: 25px;
+  }
+
+  .footer-brand h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+  }
+
+  .footer-brand p {
+    margin: 0;
+    color: #bbb;
+    line-height: 1.6;
+  }
+
+  .footer-info {
+    display: grid;
+    gap: 14px;
+  }
+
+  .footer-item strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+  }
+
+  .footer-item span,
+  .footer-item a {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .footer-social {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .footer-social a {
+    display: inline-block;
+    padding: 9px 14px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+  }
+
+  .footer-bottom {
+    margin-top: 30px;
+    padding-top: 18px;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+    color: #999;
+    font-size: 12px;
+  }
+
+  .footer-bottom p {
+    margin: 0;
+  }
+
+  @media (min-width: 700px) {
+
+    .footer-main {
+      grid-template-columns: 1.5fr 1fr 1fr;
+      align-items: start;
+    }
+
+  }
+
+</style>
+
+
+<!-- SUPABASE -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="config.js"></script>
+
+<script src="app.js"></script>
+
+</body>
+</html>
+
+<!-- INDEX.HTML COMPLETE -->
