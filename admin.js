@@ -6346,8 +6346,7 @@ setTimeout(
 console.log(
     "🚀 Mona Variety Store Premium Admin.js loaded."
 );/* ============================================================
-   FINAL PRODUCT IMAGE UPLOAD
-   SUPABASE STORAGE BUCKET: Product images
+   PRODUCT IMAGE UPLOAD
    ============================================================ */
 
 async function uploadProductImageIfSelected() {
@@ -6355,67 +6354,133 @@ async function uploadProductImageIfSelected() {
     const fileInput =
         document.getElementById("productImageUpload");
 
-    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+    if (
+        !fileInput ||
+        !fileInput.files ||
+        !fileInput.files[0]
+    ) {
         return null;
     }
 
     const file = fileInput.files[0];
 
-    if (!file.type.startsWith("image/")) {
-        throw new Error("শুধু image file upload করা যাবে।");
+    if (
+        !file.type ||
+        !file.type.startsWith("image/")
+    ) {
+        throw new Error(
+            "শুধু image file upload করা যাবে।"
+        );
     }
 
     if (file.size > 5 * 1024 * 1024) {
-        throw new Error("Image সর্বোচ্চ 5MB হতে হবে।");
+        throw new Error(
+            "Image সর্বোচ্চ 5MB হতে হবে।"
+        );
     }
 
     const extension =
-        file.name.split(".").pop().toLowerCase();
+        file.name
+            .split(".")
+            .pop()
+            .toLowerCase();
 
     const safeName =
         file.name
             .replace(/\.[^/.]+$/, "")
             .replace(/[^a-zA-Z0-9-_]/g, "-")
-            .toLowerCase();
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "")
+            .toLowerCase() ||
+        "product-image";
 
     const filePath =
         "products/" +
         Date.now() +
         "-" +
+        Math.random()
+            .toString(36)
+            .substring(2, 10) +
+        "-" +
         safeName +
         "." +
         extension;
 
-    const { error: uploadError } =
+    console.log(
+        "Uploading product image:",
+        filePath
+    );
+
+    /* ========================================================
+       UPLOAD
+       BUCKET: product-images
+       ======================================================== */
+
+    const {
+        data: uploadData,
+        error: uploadError
+    } =
         await supabaseClient.storage
-            .from("Product images")
-            .upload(filePath, file, {
-                cacheControl: "3600",
-                upsert: false,
-                contentType: file.type
-            });
+            .from("product-images")
+            .upload(
+                filePath,
+                file,
+                {
+                    cacheControl: "3600",
+                    upsert: false,
+                    contentType: file.type
+                }
+            );
 
     if (uploadError) {
-        throw uploadError;
-    }
 
-    const { data } =
-        supabaseClient.storage
-            .from("Product images")
-            .getPublicUrl(filePath);
+        console.error(
+            "PRODUCT IMAGE UPLOAD ERROR:",
+            uploadError
+        );
 
-    if (!data?.publicUrl) {
         throw new Error(
-            "Uploaded image-এর public URL পাওয়া যায়নি।"
+            uploadError.message ||
+            "Product image upload failed."
         );
     }
 
-    return data.publicUrl;
+    console.log(
+        "Product image uploaded:",
+        uploadData
+    );
+
+    /* ========================================================
+       GET PUBLIC URL
+       ======================================================== */
+
+    const {
+        data: publicUrlData
+    } =
+        supabaseClient.storage
+            .from("product-images")
+            .getPublicUrl(filePath);
+
+    const publicUrl =
+        publicUrlData?.publicUrl;
+
+    if (!publicUrl) {
+        throw new Error(
+            "Image upload হয়েছে কিন্তু public URL পাওয়া যায়নি।"
+        );
+    }
+
+    console.log(
+        "PRODUCT IMAGE URL:",
+        publicUrl
+    );
+
+    return publicUrl;
 }
 
 
 /* ============================================================
-   REPLACE SAVE PRODUCT
+   SAVE PRODUCT
    ============================================================ */
 
 window.saveProduct = async function () {
@@ -6432,20 +6497,24 @@ window.saveProduct = async function () {
         );
 
     if (!name) {
+
         showMessage(
             "productMessage",
             "Product name দিন।",
             "error"
         );
+
         return;
     }
 
     if (price <= 0) {
+
         showMessage(
             "productMessage",
             "Valid price দিন।",
             "error"
         );
+
         return;
     }
 
@@ -6463,9 +6532,10 @@ window.saveProduct = async function () {
     try {
 
         /*
-         * Existing image রাখবে যদি নতুন image
-         * select না করা হয়।
+         * পুরোনো image রাখবে যদি
+         * নতুন image select না করা হয়।
          */
+
         let imageUrl =
             getValue("productImage");
 
@@ -6476,23 +6546,33 @@ window.saveProduct = async function () {
             imageUrl = uploadedImage;
         }
 
+        /* ====================================================
+           PAYLOAD
+           ==================================================== */
+
         const payload = {
 
-            name: name,
+            name:
+                name,
 
             category_id:
                 categoryId || null,
 
-            price: price,
+            price:
+                price,
 
             old_price:
                 numberOrNull(
-                    getValue("productOldPrice")
+                    getValue(
+                        "productOldPrice"
+                    )
                 ),
 
             stock:
                 numberOrZero(
-                    getValue("productStock")
+                    getValue(
+                        "productStock"
+                    )
                 ),
 
             image:
@@ -6502,7 +6582,9 @@ window.saveProduct = async function () {
                 imageUrl || null,
 
             description:
-                getValue("productDescription"),
+                getValue(
+                    "productDescription"
+                ),
 
             active:
                 $("productActive")
@@ -6525,9 +6607,19 @@ window.saveProduct = async function () {
                     : false,
 
             discount:
-                getValue("productDiscount")
+                getValue(
+                    "productDiscount"
+                )
         };
 
+        console.log(
+            "PRODUCT SAVE PAYLOAD:",
+            payload
+        );
+
+        /* ====================================================
+           UPDATE / INSERT
+           ==================================================== */
 
         let result;
 
@@ -6547,13 +6639,24 @@ window.saveProduct = async function () {
             result =
                 await supabaseClient
                     .from("products")
-                    .insert(payload);
-
+                    .insert(
+                        payload
+                    );
         }
 
         if (result.error) {
+
+            console.error(
+                "PRODUCT DATABASE ERROR:",
+                result.error
+            );
+
             throw result.error;
         }
+
+        /* ====================================================
+           SUCCESS
+           ==================================================== */
 
         showMessage(
             "productMessage",
@@ -6563,6 +6666,10 @@ window.saveProduct = async function () {
             "success"
         );
 
+        /* ====================================================
+           CLEAR FILE INPUT
+           ==================================================== */
+
         const fileInput =
             $("productImageUpload");
 
@@ -6570,15 +6677,32 @@ window.saveProduct = async function () {
             fileInput.value = "";
         }
 
+        /* ====================================================
+           CLEAR PREVIEW
+           ==================================================== */
+
         const preview =
             $("productImagePreview");
 
         if (preview) {
-            preview.removeAttribute("src");
-            preview.style.display = "none";
+
+            preview.removeAttribute(
+                "src"
+            );
+
+            preview.style.display =
+                "none";
         }
 
+        /* ====================================================
+           RESET FORM
+           ==================================================== */
+
         resetProductForm();
+
+        /* ====================================================
+           RELOAD PRODUCTS
+           ==================================================== */
 
         await loadProducts();
 
@@ -6605,7 +6729,6 @@ window.saveProduct = async function () {
             button,
             false
         );
-
     }
 };
 
@@ -6628,7 +6751,9 @@ document.addEventListener(
                 "productImagePreview"
             );
 
-        if (!input || !preview) return;
+        if (!input || !preview) {
+            return;
+        }
 
         input.addEventListener(
             "change",
@@ -6638,18 +6763,95 @@ document.addEventListener(
                     input.files?.[0];
 
                 if (!file) {
-                    preview.removeAttribute("src");
-                    preview.style.display = "none";
+
+                    preview.removeAttribute(
+                        "src"
+                    );
+
+                    preview.style.display =
+                        "none";
+
                     return;
                 }
 
-                preview.src =
-                    URL.createObjectURL(file);
+                if (
+                    !file.type ||
+                    !file.type.startsWith("image/")
+                ) {
 
-                preview.style.display =
-                    "block";
+                    alert(
+                        "শুধু image file select করুন।"
+                    );
+
+                    input.value = "";
+
+                    preview.removeAttribute(
+                        "src"
+                    );
+
+                    preview.style.display =
+                        "none";
+
+                    return;
+                }
+
+                if (
+                    file.size >
+                    5 * 1024 * 1024
+                ) {
+
+                    alert(
+                        "Image সর্বোচ্চ 5MB হতে হবে।"
+                    );
+
+                    input.value = "";
+
+                    preview.removeAttribute(
+                        "src"
+                    );
+
+                    preview.style.display =
+                        "none";
+
+                    return;
+                }
+
+                try {
+
+                    const objectUrl =
+                        URL.createObjectURL(
+                            file
+                        );
+
+                    preview.src =
+                        objectUrl;
+
+                    preview.style.display =
+                        "block";
+
+                    preview.onload =
+                        function () {
+
+                            URL.revokeObjectURL(
+                                objectUrl
+                            );
+                        };
+
+                } catch (error) {
+
+                    console.error(
+                        "IMAGE PREVIEW ERROR:",
+                        error
+                    );
+
+                    preview.removeAttribute(
+                        "src"
+                    );
+
+                    preview.style.display =
+                        "none";
+                }
             }
         );
-
     }
 );
