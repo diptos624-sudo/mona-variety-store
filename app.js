@@ -1,25 +1,30 @@
-/* ============================================================
-   MONA VARIETY STORE - CUSTOMER APP
-   CLEAN FIXED VERSION
-   ============================================================ */
+// ============================================================
+// MONA VARIETY STORE - APP.JS
+// PART 1 / 3
+// ============================================================
 
 const supabaseClient = window.supabase.createClient(
   window.SUPABASE_URL,
   window.SUPABASE_ANON_KEY
 );
 
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+
 let storeSettings = {};
 let categories = [];
 let products = [];
 let paymentMethods = [];
 let cart = [];
+
 let currentCategory = "all";
 let currentSearch = "";
 let selectedProduct = null;
 
-/* ============================================================
-   STARTUP
-   ============================================================ */
+// ============================================================
+// START APP
+// ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
   loadCart();
@@ -34,12 +39,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateCartUI();
 });
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
+// ============================================================
+// HELPERS
+// ============================================================
 
 function escapeHTML(value) {
-  return String(value ?? "")
+  if (value === null || value === undefined) return "";
+
+  return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -48,65 +55,79 @@ function escapeHTML(value) {
 }
 
 function money(value) {
-  const n = Number(value) || 0;
-  return `৳${n.toLocaleString("en-BD")}`;
+  const number = Number(value) || 0;
+
+  return `৳${number.toLocaleString("en-BD")}`;
 }
 
 function getProductImage(product) {
-  return product?.image_url || product?.image || "";
+  if (!product) return "";
+
+  return (
+    product.image_url ||
+    product.image ||
+    ""
+  );
 }
 
 function getCategoryName(product) {
   if (!product) return "";
 
-  const found = categories.find(
-    c => String(c.id) === String(product.category_id)
-  );
+  if (product.category_id) {
+    const category = categories.find(
+      item => String(item.id) === String(product.category_id)
+    );
 
-  return found?.name || product.category || "";
+    if (category) {
+      return category.name || "";
+    }
+  }
+
+  return product.category || "";
 }
 
 function normalizePhone(phone) {
-  let value = String(phone || "").replace(/[^\d+]/g, "");
-
-  if (value.startsWith("01")) {
-    return "880" + value.substring(1);
-  }
-
-  if (value.startsWith("+880")) {
-    return value.substring(1);
-  }
-
-  return value;
+  return String(phone || "")
+    .replace(/\D/g, "")
+    .replace(/^00/, "");
 }
 
 function getWhatsAppNumber() {
-  return normalizePhone(
-    storeSettings.whatsapp ||
-    storeSettings.whatsapp_number ||
-    storeSettings.phone ||
-    ""
-  );
-}
+  const possibleKeys = [
+    "whatsapp",
+    "whatsapp_number",
+    "whatsapp_phone",
+    "phone",
+    "mobile"
+  ];
 
-function getSettingValue(...keys) {
-  for (const key of keys) {
-    if (
-      storeSettings &&
-      storeSettings[key] !== undefined &&
-      storeSettings[key] !== null &&
-      String(storeSettings[key]).trim() !== ""
-    ) {
-      return storeSettings[key];
+  for (const key of possibleKeys) {
+    if (storeSettings?.[key]) {
+      return normalizePhone(storeSettings[key]);
     }
   }
 
   return "";
 }
 
-/* ============================================================
-   STORE SETTINGS
-   ============================================================ */
+function getSettingValue(...keys) {
+  for (const key of keys) {
+    if (
+      storeSettings &&
+      storeSettings[key] !== null &&
+      storeSettings[key] !== undefined &&
+      storeSettings[key] !== ""
+    ) {
+      return storeSettings[key];
+    }
+  }
+
+  return null;
+}
+
+// ============================================================
+// STORE SETTINGS
+// ============================================================
 
 async function loadStoreSettings() {
   try {
@@ -117,159 +138,175 @@ async function loadStoreSettings() {
       .maybeSingle();
 
     if (error) {
-      console.warn("Store settings error:", error.message);
+      console.warn("Store settings error:", error);
       storeSettings = {};
       return;
     }
 
     storeSettings = data || {};
+
+    console.log("Store settings loaded:", storeSettings);
   } catch (error) {
     console.warn("Store settings exception:", error);
     storeSettings = {};
   }
 }
 
-/* ============================================================
-   CATEGORIES
-   ============================================================ */
+// ============================================================
+// CATEGORIES
+// ============================================================
 
 async function loadCategories() {
-  const { data, error } = await supabaseClient
-    .from("categories")
-    .select("*")
-    .order("name", { ascending: true });
+  try {
+    const { data, error } = await supabaseClient
+      .from("categories")
+      .select("*")
+      .order("name", { ascending: true });
 
-  if (error) {
-    console.error("Category Error:", error);
+    if (error) {
+      console.warn("Categories error:", error);
+      categories = [];
+      return;
+    }
+
+    categories = data || [];
+
+    console.log("Categories loaded:", categories);
+  } catch (error) {
+    console.warn("Categories exception:", error);
     categories = [];
-    return;
   }
-
-  categories = data || [];
-  renderCategories();
 }
 
 function renderCategories() {
-  const containers = [
-    document.getElementById("categoryList"),
-    document.getElementById("categories"),
-    document.getElementById("categoryButtons")
-  ].filter(Boolean);
+  const container =
+    document.querySelector("#categoryList") ||
+    document.querySelector(".category-list") ||
+    document.querySelector("#categories");
 
-  if (!containers.length) return;
+  if (!container) return;
 
-  const html = [
-    `<button class="category-btn active"
+  let html = `
+    <button
+      class="category-btn active"
+      type="button"
       data-category="all"
-      onclick="filterCategory('all')">
+      onclick="filterCategory('all')"
+    >
       সব পণ্য
-    </button>`,
+    </button>
+  `;
 
-    ...categories.map(category => `
+  categories.forEach(category => {
+    html += `
       <button
         class="category-btn"
+        type="button"
         data-category="${escapeHTML(category.id)}"
         onclick="filterCategory('${escapeHTML(category.id)}')"
       >
-        ${escapeHTML(category.name)}
+        ${escapeHTML(category.name || "Category")}
       </button>
-    `)
-  ].join("");
-
-  containers.forEach(container => {
-    container.innerHTML = html;
+    `;
   });
+
+  container.innerHTML = html;
+
+  updateCategoryButtons();
 }
 
 function filterCategory(categoryId) {
   currentCategory = String(categoryId || "all");
 
-  renderCategoriesActiveState();
+  updateCategoryButtons();
   renderProducts();
 }
 
-function renderCategoriesActiveState() {
-  document.querySelectorAll(".category-btn").forEach(button => {
-    const value = String(button.dataset.category || "");
+function updateCategoryButtons() {
+  const buttons = document.querySelectorAll(
+    ".category-btn, [data-category]"
+  );
 
-    button.classList.toggle(
-      "active",
-      value === currentCategory
+  buttons.forEach(button => {
+    const value = String(
+      button.dataset.category || ""
     );
+
+    if (value === currentCategory) {
+      button.classList.add("active");
+    } else {
+      button.classList.remove("active");
+    }
   });
 }
 
-/* ============================================================
-   PRODUCTS
-   ============================================================ */
+// ============================================================
+// PRODUCTS
+// ============================================================
 
 async function loadProducts() {
-  const { data, error } = await supabaseClient
-    .from("products")
-    .select("*")
-    .eq("active", true)
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await supabaseClient
+      .from("products")
+      .select("*")
+      .eq("active", true)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Product Error:", error);
-
-    products = [];
-
-    const grid = document.getElementById("productGrid");
-
-    if (grid) {
-      grid.innerHTML = `
-        <div class="empty-state">
-          পণ্য লোড করা যায়নি।
-        </div>
-      `;
+    if (error) {
+      console.error("Products error:", error);
+      products = [];
+      return;
     }
 
-    return;
+    products = data || [];
+
+    console.log("Products loaded:", products);
+    console.log("Products found:", products.length);
+  } catch (error) {
+    console.error("Products exception:", error);
+    products = [];
   }
-
-  products = data || [];
-
-  console.log("Products loaded:", products);
-  console.log("Products found:", products.length);
-
-  renderProducts();
 }
 
 function getFilteredProducts() {
   let result = [...products];
 
-  /* CATEGORY FIX:
-     Database uses category_id */
-  if (currentCategory !== "all") {
-    result = result.filter(
-      product =>
+  // CATEGORY FILTER
+  if (
+    currentCategory &&
+    currentCategory !== "all"
+  ) {
+    result = result.filter(product => {
+      return (
         String(product.category_id || "") ===
         String(currentCategory)
-    );
+      );
+    });
   }
 
-  const search = String(currentSearch || "")
-    .trim()
-    .toLowerCase();
+  // SEARCH FILTER
+  if (currentSearch.trim()) {
+    const search = currentSearch
+      .trim()
+      .toLowerCase();
 
-  if (search) {
     result = result.filter(product => {
-      const name = String(product.name || "")
-        .toLowerCase();
+      const name = String(
+        product.name || ""
+      ).toLowerCase();
 
       const description = String(
         product.description || ""
       ).toLowerCase();
 
-      const category = String(
+      const categoryName = String(
         getCategoryName(product) || ""
       ).toLowerCase();
 
       return (
         name.includes(search) ||
         description.includes(search) ||
-        category.includes(search)
+        categoryName.includes(search)
       );
     });
   }
@@ -278,22 +315,25 @@ function getFilteredProducts() {
 }
 
 function renderProducts() {
-  const grid =
-    document.getElementById("productGrid") ||
-    document.getElementById("productsGrid") ||
-    document.getElementById("products");
+  const filteredProducts =
+    getFilteredProducts();
 
-  if (!grid) {
-    console.warn("Product grid element not found.");
+  const container =
+    document.querySelector("#productGrid") ||
+    document.querySelector(".product-grid") ||
+    document.querySelector("#productsGrid") ||
+    document.querySelector("#products");
+
+  if (!container) {
+    console.warn(
+      "Product container not found."
+    );
     return;
   }
 
-  const filtered = getFilteredProducts();
-
-  if (!filtered.length) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <div style="font-size:40px;">🛍️</div>
+  if (!filteredProducts.length) {
+    container.innerHTML = `
+      <div class="empty-products">
         <p>কোনো পণ্য পাওয়া যায়নি।</p>
       </div>
     `;
@@ -301,62 +341,62 @@ function renderProducts() {
     return;
   }
 
-  grid.innerHTML = filtered
-    .map(productCard)
-    .join("");
+  container.innerHTML =
+    filteredProducts
+      .map(product => productCard(product))
+      .join("");
 }
 
 function productCard(product) {
   const image = getProductImage(product);
-  const category = getCategoryName(product);
 
-  const stock = Number(product.stock) || 0;
-  const price = Number(product.price) || 0;
-  const oldPrice = Number(product.old_price) || 0;
+  const name = escapeHTML(
+    product.name || "Product"
+  );
+
+  const price = money(product.price);
+
+  const oldPrice =
+    product.old_price &&
+    Number(product.old_price) >
+      Number(product.price)
+      ? `
+        <span class="old-price">
+          ${money(product.old_price)}
+        </span>
+      `
+      : "";
+
+  const category = escapeHTML(
+    getCategoryName(product)
+  );
 
   const imageHTML = image
     ? `
       <img
         src="${escapeHTML(image)}"
-        alt="${escapeHTML(product.name)}"
+        alt="${name}"
         loading="lazy"
-        onerror="
-          this.style.display='none';
-          this.nextElementSibling.style.display='flex';
-        "
+        onerror="this.style.display='none';"
       >
-
-      <div
-        class="product-image-placeholder"
-        style="display:none;"
-      >
-        🛍️
-      </div>
     `
     : `
       <div class="product-image-placeholder">
-        🛍️
+        <span>📦</span>
       </div>
     `;
 
   return `
     <div
       class="product-card"
-      onclick="openProductModal('${escapeHTML(product.id)}')"
+      data-product-id="${escapeHTML(product.id)}"
     >
 
-      <div class="product-image">
-
+      <div
+        class="product-image"
+        onclick="openProductModal('${escapeHTML(product.id)}')"
+      >
         ${imageHTML}
-
-        ${
-          product.is_new
-            ? `<span class="product-badge">নতুন</span>`
-            : product.is_discount
-              ? `<span class="product-badge">অফার</span>`
-              : ""
-        }
-
       </div>
 
       <div class="product-info">
@@ -365,61 +405,27 @@ function productCard(product) {
           category
             ? `
               <div class="product-category">
-                ${escapeHTML(category)}
+                ${category}
               </div>
             `
             : ""
         }
 
         <h3 class="product-name">
-          ${escapeHTML(product.name)}
+          ${name}
         </h3>
 
-        <div class="product-price-row">
-
-          <span class="product-price">
-            ${money(price)}
-          </span>
-
-          ${
-            oldPrice > price
-              ? `
-                <span class="product-old-price">
-                  ${money(oldPrice)}
-                </span>
-              `
-              : ""
-          }
-
-        </div>
-
-        <div class="product-stock">
-
-          ${
-            stock > 0
-              ? `স্টক: ${stock}`
-              : `
-                <span style="color:#d00;">
-                  স্টক শেষ
-                </span>
-              `
-          }
-
+        <div class="product-price">
+          ${price}
+          ${oldPrice}
         </div>
 
         <button
+          type="button"
           class="add-to-cart-btn"
-          onclick="
-            event.stopPropagation();
-            addToCart('${escapeHTML(product.id)}')
-          "
-          ${stock <= 0 ? "disabled" : ""}
+          onclick="addToCart('${escapeHTML(product.id)}')"
         >
-          ${
-            stock > 0
-              ? "কার্টে যোগ করুন"
-              : "স্টক শেষ"
-          }
+          🛒 কার্টে যোগ করুন
         </button>
 
       </div>
@@ -428,102 +434,89 @@ function productCard(product) {
   `;
 }
 
-/* ============================================================
-   PRODUCT MODAL
-   ============================================================ */
+// ============================================================
+// PRODUCT MODAL
+// ============================================================
 
 function openProductModal(productId) {
-  selectedProduct = products.find(
-    product =>
-      String(product.id) === String(productId)
+  const product = products.find(
+    item =>
+      String(item.id) ===
+      String(productId)
   );
 
-  if (!selectedProduct) return;
+  if (!product) return;
+
+  selectedProduct = product;
 
   const modal =
-    document.getElementById("productModal") ||
-    document.getElementById("productDetailsModal");
+    document.querySelector("#productModal") ||
+    document.querySelector(".product-modal");
 
-  if (!modal) return;
-
-  const image = getProductImage(selectedProduct);
-  const category = getCategoryName(selectedProduct);
-
-  const price =
-    Number(selectedProduct.price) || 0;
-
-  const oldPrice =
-    Number(selectedProduct.old_price) || 0;
-
-  const imageContainer =
-    modal.querySelector(".product-modal-image") ||
-    modal.querySelector(".modal-product-image");
-
-  if (imageContainer) {
-    imageContainer.innerHTML = image
-      ? `
-        <img
-          src="${escapeHTML(image)}"
-          alt="${escapeHTML(selectedProduct.name)}"
-          onerror="this.style.display='none';"
-        >
-      `
-      : `
-        <div class="product-image-placeholder">
-          🛍️
-        </div>
-      `;
+  if (!modal) {
+    addToCart(product.id);
+    return;
   }
 
-  const nameEl =
-    modal.querySelector(".modal-product-name") ||
-    modal.querySelector("#modalProductName");
+  const image = getProductImage(product);
 
-  const priceEl =
-    modal.querySelector(".modal-product-price") ||
-    modal.querySelector("#modalProductPrice");
+  const imageElement =
+    modal.querySelector(
+      "#modalProductImage"
+    ) ||
+    modal.querySelector(
+      ".modal-product-image"
+    );
 
-  const descEl =
-    modal.querySelector(".modal-product-description") ||
-    modal.querySelector("#modalProductDescription");
+  const titleElement =
+    modal.querySelector(
+      "#modalProductName"
+    ) ||
+    modal.querySelector(
+      ".modal-product-name"
+    );
 
-  const categoryEl =
-    modal.querySelector(".modal-product-category") ||
-    modal.querySelector("#modalProductCategory");
+  const priceElement =
+    modal.querySelector(
+      "#modalProductPrice"
+    ) ||
+    modal.querySelector(
+      ".modal-product-price"
+    );
 
-  if (nameEl) {
-    nameEl.textContent =
-      selectedProduct.name || "";
+  const descriptionElement =
+    modal.querySelector(
+      "#modalProductDescription"
+    ) ||
+    modal.querySelector(
+      ".modal-product-description"
+    );
+
+  if (imageElement) {
+    if (image) {
+      imageElement.src = image;
+      imageElement.style.display =
+        "block";
+    } else {
+      imageElement.removeAttribute("src");
+      imageElement.style.display =
+        "none";
+    }
   }
 
-  if (priceEl) {
-    priceEl.innerHTML = `
-      ${money(price)}
-
-      ${
-        oldPrice > price
-          ? `
-            <del
-              style="
-                opacity:.6;
-                font-size:.8em;
-              "
-            >
-              ${money(oldPrice)}
-            </del>
-          `
-          : ""
-      }
-    `;
+  if (titleElement) {
+    titleElement.textContent =
+      product.name || "";
   }
 
-  if (descEl) {
-    descEl.textContent =
-      selectedProduct.description || "";
+  if (priceElement) {
+    priceElement.textContent =
+      money(product.price);
   }
 
-  if (categoryEl) {
-    categoryEl.textContent = category;
+  if (descriptionElement) {
+    descriptionElement.textContent =
+      product.description || "";
   }
 
   modal.classList.add("show");
@@ -532,35 +525,38 @@ function openProductModal(productId) {
 
 function closeProductModal() {
   const modal =
-    document.getElementById("productModal") ||
-    document.getElementById("productDetailsModal");
+    document.querySelector("#productModal") ||
+    document.querySelector(".product-modal");
 
   if (!modal) return;
 
-  modal.classList.remove(
-    "show",
-    "active"
-  );
+  modal.classList.remove("show");
+  modal.classList.remove("active");
 
   selectedProduct = null;
 }
 
-/* ============================================================
-   CART
-   ============================================================ */
+// ============================================================
+// CART
+// ============================================================
 
 function loadCart() {
   try {
     const saved =
       localStorage.getItem("monaCart");
 
-    cart = saved
-      ? JSON.parse(saved)
-      : [];
-
-    if (!Array.isArray(cart)) {
+    if (!saved) {
       cart = [];
+      return;
     }
+
+    const parsed =
+      JSON.parse(saved);
+
+    cart =
+      Array.isArray(parsed)
+        ? parsed
+        : [];
   } catch (error) {
     console.warn(
       "Cart load error:",
@@ -572,26 +568,25 @@ function loadCart() {
 }
 
 function saveCart() {
-  localStorage.setItem(
-    "monaCart",
-    JSON.stringify(cart)
-  );
-
-  updateCartUI();
+  try {
+    localStorage.setItem(
+      "monaCart",
+      JSON.stringify(cart)
+    );
+  } catch (error) {
+    console.warn(
+      "Cart save error:",
+      error
+    );
+  }
 }
 
-function addToCart(
-  productOrId,
-  quantity = 1
-) {
-  const product =
-    typeof productOrId === "object"
-      ? productOrId
-      : products.find(
-          item =>
-            String(item.id) ===
-            String(productOrId)
-        );
+function addToCart(productId) {
+  const product = products.find(
+    item =>
+      String(item.id) ===
+      String(productId)
+  );
 
   if (!product) {
     alert("পণ্য পাওয়া যায়নি।");
@@ -599,109 +594,126 @@ function addToCart(
   }
 
   const stock =
-    Number(product.stock) || 0;
+    Number(product.stock);
 
-  if (stock <= 0) {
-    alert(
-      "এই পণ্যটি এখন স্টকে নেই।"
-    );
-
+  if (
+    Number.isFinite(stock) &&
+    stock <= 0
+  ) {
+    alert("এই পণ্যটি বর্তমানে স্টকে নেই।");
     return;
   }
 
-  const existing = cart.find(
-    item =>
-      String(item.id) ===
-      String(product.id)
-  );
+  const existing =
+    cart.find(
+      item =>
+        String(item.id) ===
+        String(product.id)
+    );
 
   if (existing) {
-    const nextQty =
+    const newQuantity =
       Number(existing.quantity || 0) +
-      Number(quantity || 1);
+      1;
 
-    if (nextQty > stock) {
+    if (
+      Number.isFinite(stock) &&
+      stock > 0 &&
+      newQuantity > stock
+    ) {
       alert(
         `সর্বোচ্চ ${stock} টি নেওয়া যাবে।`
       );
-
-      existing.quantity = stock;
-    } else {
-      existing.quantity = nextQty;
+      return;
     }
+
+    existing.quantity =
+      newQuantity;
   } else {
     cart.push({
       id: product.id,
       name: product.name,
       price: Number(product.price) || 0,
-      image: getProductImage(product),
-      stock: stock,
-      quantity: Math.min(
-        Number(quantity) || 1,
-        stock
-      )
+      image:
+        getProductImage(product),
+      quantity: 1
     });
   }
 
   saveCart();
+  updateCartUI();
   renderCart();
+
+  closeProductModal();
 }
 
 function changeQuantity(
   productId,
-  delta
+  change
 ) {
-  const item = cart.find(
-    cartItem =>
-      String(cartItem.id) ===
-      String(productId)
-  );
+  const item =
+    cart.find(
+      product =>
+        String(product.id) ===
+        String(productId)
+    );
 
   if (!item) return;
 
-  const stock =
-    Number(item.stock) || 0;
+  item.quantity =
+    Number(item.quantity || 1) +
+    Number(change || 0);
 
-  const next =
-    Number(item.quantity || 0) +
-    Number(delta || 0);
-
-  if (next <= 0) {
+  if (item.quantity <= 0) {
     removeFromCart(productId);
     return;
   }
 
-  if (stock > 0 && next > stock) {
-    alert(
-      `সর্বোচ্চ ${stock} টি নেওয়া যাবে।`
+  const product =
+    products.find(
+      product =>
+        String(product.id) ===
+        String(productId)
     );
 
-    item.quantity = stock;
-  } else {
-    item.quantity = next;
+  if (
+    product &&
+    Number(product.stock) > 0 &&
+    item.quantity >
+      Number(product.stock)
+  ) {
+    item.quantity =
+      Number(product.stock);
+
+    alert(
+      `সর্বোচ্চ ${product.stock} টি নেওয়া যাবে।`
+    );
   }
 
   saveCart();
+  updateCartUI();
   renderCart();
 }
 
 function removeFromCart(productId) {
-  cart = cart.filter(
-    item =>
-      String(item.id) !==
-      String(productId)
-  );
+  cart =
+    cart.filter(
+      item =>
+        String(item.id) !==
+        String(productId)
+    );
 
   saveCart();
+  updateCartUI();
   renderCart();
 }
 
 function getCartSubtotal() {
   return cart.reduce(
-    (sum, item) =>
-      sum +
+    (total, item) =>
+      total +
       (Number(item.price) || 0) *
-      (Number(item.quantity) || 0),
+        (Number(item.quantity) || 0),
     0
   );
 }
@@ -710,80 +722,64 @@ function calculateDelivery() {
   const subtotal =
     getCartSubtotal();
 
-  const freeDeliveryMinimum =
-    Number(
-      getSettingValue(
-        "free_delivery_minimum",
-        "free_delivery_amount",
-        "free_shipping_minimum"
-      )
-    );
+  const freeMinimum = Number(
+    getSettingValue(
+      "free_delivery_minimum",
+      "free_delivery_amount",
+      "free_shipping_minimum"
+    )
+  );
+
+  const delivery = Number(
+    getSettingValue(
+      "delivery_charge",
+      "delivery_fee",
+      "shipping_charge",
+      "delivery"
+    )
+  );
 
   if (
-    freeDeliveryMinimum > 0 &&
-    subtotal >= freeDeliveryMinimum
+    freeMinimum > 0 &&
+    subtotal >= freeMinimum
   ) {
     return 0;
   }
 
-  const delivery =
-    Number(
-      getSettingValue(
-        "delivery_charge",
-        "delivery_fee",
-        "shipping_charge",
-        "delivery"
-      )
-    );
-
-  return Number.isFinite(delivery)
-    ? delivery
-    : 0;
+  return delivery || 0;
 }
 
 function updateCartUI() {
   const count =
     cart.reduce(
-      (sum, item) =>
-        sum +
+      (total, item) =>
+        total +
         (Number(item.quantity) || 0),
       0
     );
 
-  const subtotal =
-    getCartSubtotal();
+  const elements =
+    document.querySelectorAll(
+      "#cartCount, .cart-count, [data-cart-count]"
+    );
 
-  document.querySelectorAll(
-    "#cartCount, .cart-count, [data-cart-count]"
-  ).forEach(el => {
-    el.textContent = count;
-  });
-
-  document.querySelectorAll(
-    "#cartSubtotal, .cart-subtotal, [data-cart-subtotal]"
-  ).forEach(el => {
-    el.textContent =
-      money(subtotal);
+  elements.forEach(element => {
+    element.textContent = count;
   });
 }
 
 function renderCart() {
   const container =
-    document.getElementById("cartItems") ||
-    document.getElementById("cartList");
+    document.querySelector("#cartItems") ||
+    document.querySelector(".cart-items") ||
+    document.querySelector("#cartItemList");
 
   if (!container) return;
 
   if (!cart.length) {
     container.innerHTML = `
       <div class="empty-cart">
-        <div style="font-size:48px;">
-          🛒
-        </div>
-
-        <p>
-          আপনার কার্ট খালি।
-        </p>
+        <p>আপনার কার্ট খালি।</p>
       </div>
     `;
 
@@ -792,7 +788,9 @@ function renderCart() {
   }
 
   container.innerHTML =
-    cart.map(cartItemHTML).join("");
+    cart
+      .map(item => cartItemHTML(item))
+      .join("");
 
   updateCartTotals();
 }
@@ -802,28 +800,22 @@ function cartItemHTML(item) {
     item.image || "";
 
   return `
-    <div class="cart-item">
+    <div
+      class="cart-item"
+      data-cart-id="${escapeHTML(item.id)}"
+    >
 
       <div class="cart-item-image">
-
         ${
           image
             ? `
               <img
                 src="${escapeHTML(image)}"
                 alt="${escapeHTML(item.name)}"
-                onerror="
-                  this.style.display='none';
-                "
               >
             `
-            : `
-              <div class="product-image-placeholder">
-                🛍️
-              </div>
-            `
+            : "📦"
         }
-
       </div>
 
       <div class="cart-item-info">
@@ -836,15 +828,11 @@ function cartItemHTML(item) {
           ${money(item.price)}
         </div>
 
-        <div class="cart-item-controls">
+        <div class="cart-quantity">
 
           <button
-            onclick="
-              changeQuantity(
-                '${escapeHTML(item.id)}',
-                -1
-              )
-            "
+            type="button"
+            onclick="changeQuantity('${escapeHTML(item.id)}', -1)"
           >
             −
           </button>
@@ -854,28 +842,21 @@ function cartItemHTML(item) {
           </span>
 
           <button
-            onclick="
-              changeQuantity(
-                '${escapeHTML(item.id)}',
-                1
-              )
-            "
+            type="button"
+            onclick="changeQuantity('${escapeHTML(item.id)}', 1)"
           >
             +
           </button>
 
-          <button
-            class="remove-cart-item"
-            onclick="
-              removeFromCart(
-                '${escapeHTML(item.id)}'
-              )
-            "
-          >
-            ×
-          </button>
-
         </div>
+
+        <button
+          type="button"
+          class="remove-cart-item"
+          onclick="removeFromCart('${escapeHTML(item.id)}')"
+        >
+          Remove
+        </button>
 
       </div>
 
@@ -893,101 +874,124 @@ function updateCartTotals() {
   const total =
     subtotal + delivery;
 
-  document.querySelectorAll(
-    "#cartSubtotal, .cart-subtotal, [data-cart-subtotal]"
-  ).forEach(el => {
-    el.textContent =
-      money(subtotal);
-  });
+  const subtotalElements =
+    document.querySelectorAll(
+      "#cartSubtotal, .cart-subtotal"
+    );
 
-  document.querySelectorAll(
-    "#cartDelivery, .cart-delivery, [data-cart-delivery]"
-  ).forEach(el => {
-    el.textContent =
-      money(delivery);
-  });
+  subtotalElements.forEach(
+    element => {
+      element.textContent =
+        money(subtotal);
+    }
+  );
 
-  document.querySelectorAll(
-    "#cartTotal, .cart-total, [data-cart-total]"
-  ).forEach(el => {
-    el.textContent =
-      money(total);
-  });
-}
+  const deliveryElements =
+    document.querySelectorAll(
+      "#cartDelivery, .cart-delivery, #deliveryCharge"
+    );
 
-function openCart() {
-  const modal =
-    document.getElementById("cartModal") ||
-    document.getElementById("cartDrawer");
+  deliveryElements.forEach(
+    element => {
+      element.textContent =
+        money(delivery);
+    }
+  );
 
-  if (!modal) return;
+  const totalElements =
+    document.querySelectorAll(
+      "#cartTotal, .cart-total"
+    );
 
-  renderCart();
-
-  modal.classList.add("show");
-  modal.classList.add("active");
-}
-
-function closeCart() {
-  const modal =
-    document.getElementById("cartModal") ||
-    document.getElementById("cartDrawer");
-
-  if (!modal) return;
-
-  modal.classList.remove(
-    "show",
-    "active"
+  totalElements.forEach(
+    element => {
+      element.textContent =
+        money(total);
+    }
   );
 }
 
-/* ============================================================
-   PAYMENT METHODS
-   ============================================================ */
+function openCart() {
+  const cartModal =
+    document.querySelector("#cartModal") ||
+    document.querySelector(".cart-modal");
+
+  if (!cartModal) return;
+
+  renderCart();
+
+  cartModal.classList.add("show");
+  cartModal.classList.add("active");
+}
+
+function closeCart() {
+  const cartModal =
+    document.querySelector("#cartModal") ||
+    document.querySelector(".cart-modal");
+
+  if (!cartModal) return;
+
+  cartModal.classList.remove("show");
+  cartModal.classList.remove("active");
+}
+
+// ============================================================
+// PAYMENT METHODS
+// ============================================================
 
 async function loadPaymentMethods() {
-  const { data, error } =
-    await supabaseClient
-      .from("payment_methods")
-      .select("*")
-      .order("created_at", {
-        ascending: true
-      });
+  try {
+    // IMPORTANT:
+    // payment_methods table does NOT have created_at,
+    // so we do NOT order by created_at.
 
-  if (error) {
+    const { data, error } =
+      await supabaseClient
+        .from("payment_methods")
+        .select("*");
+
+    if (error) {
+      console.warn(
+        "Payment methods error:",
+        error
+      );
+
+      paymentMethods = [];
+      return;
+    }
+
+    paymentMethods = data || [];
+
+    console.log(
+      "Payment methods loaded:",
+      paymentMethods
+    );
+  } catch (error) {
     console.warn(
-      "Payment methods error:",
-      error.message
+      "Payment methods exception:",
+      error
     );
 
     paymentMethods = [];
-
-    renderPaymentMethods();
-
-    return;
   }
-
-  paymentMethods = data || [];
-
-  renderPaymentMethods();
 }
 
 function renderPaymentMethods() {
   const container =
-    document.getElementById(
-      "checkoutPaymentMethods"
+    document.querySelector(
+      "#checkoutPaymentMethods"
     ) ||
-    document.getElementById(
-      "paymentMethods"
+    document.querySelector(
+      ".checkout-payment-methods"
     );
 
   if (!container) return;
 
   if (!paymentMethods.length) {
     container.innerHTML = `
-      <div class="payment-empty">
-        পেমেন্ট মেথড পাওয়া যায়নি।
-      </div>
+      <p class="payment-empty">
+        Payment method পাওয়া যাচ্ছে না।
+      </p>
     `;
 
     return;
@@ -997,16 +1001,17 @@ function renderPaymentMethods() {
     paymentMethods
       .map((method, index) => {
         const id =
-          method.id ?? index;
+          method.id ??
+          index;
 
         const name =
           method.name ||
           method.title ||
-          method.payment_method ||
+          method.method ||
           "Payment";
 
         return `
-          <label class="payment-method">
+          <label class="payment-method-option">
 
             <input
               type="radio"
@@ -1033,40 +1038,49 @@ function getSelectedPaymentMethod() {
 
   if (!selected) return "";
 
-  const value =
+  const id =
     selected.value;
 
   const method =
     paymentMethods.find(
       item =>
-        String(item.id) ===
-        String(value)
+        String(
+          item.id
+        ) === String(id)
     );
 
+  if (!method) {
+    return id;
+  }
+
   return (
-    method?.name ||
-    method?.title ||
-    method?.payment_method ||
-    value
+    method.name ||
+    method.title ||
+    method.method ||
+    id
   );
-}/* ============================================================
-   CHECKOUT
-   ============================================================ */
+}// ============================================================
+// CHECKOUT
+// PART 2 / 3
+// ============================================================
 
 function openCheckout() {
   if (!cart.length) {
-    alert("কার্টে কোনো পণ্য নেই।");
+    alert("আপনার কার্ট খালি।");
     return;
   }
 
-  renderCart();
-  updateCheckoutTotals();
-
   const modal =
-    document.getElementById("checkoutModal") ||
-    document.getElementById("checkout");
+    document.querySelector("#checkoutModal") ||
+    document.querySelector(".checkout-modal");
 
-  if (!modal) return;
+  if (!modal) {
+    console.warn("Checkout modal not found.");
+    return;
+  }
+
+  renderPaymentMethods();
+  updateCheckoutTotals();
 
   modal.classList.add("show");
   modal.classList.add("active");
@@ -1074,15 +1088,13 @@ function openCheckout() {
 
 function closeCheckout() {
   const modal =
-    document.getElementById("checkoutModal") ||
-    document.getElementById("checkout");
+    document.querySelector("#checkoutModal") ||
+    document.querySelector(".checkout-modal");
 
   if (!modal) return;
 
-  modal.classList.remove(
-    "show",
-    "active"
-  );
+  modal.classList.remove("show");
+  modal.classList.remove("active");
 }
 
 function updateCheckoutTotals() {
@@ -1095,73 +1107,76 @@ function updateCheckoutTotals() {
   const total =
     subtotal + delivery;
 
-  document.querySelectorAll(
-    "#checkoutSubtotal, .checkout-subtotal, [data-checkout-subtotal]"
-  ).forEach(el => {
-    el.textContent =
-      money(subtotal);
+  const subtotalElements =
+    document.querySelectorAll(
+      "#checkoutSubtotal, .checkout-subtotal"
+    );
+
+  subtotalElements.forEach(element => {
+    element.textContent = money(subtotal);
   });
 
-  document.querySelectorAll(
-    "#checkoutDelivery, .checkout-delivery, [data-checkout-delivery]"
-  ).forEach(el => {
-    el.textContent =
-      money(delivery);
+  const deliveryElements =
+    document.querySelectorAll(
+      "#checkoutDelivery, .checkout-delivery, #checkoutDeliveryCharge"
+    );
+
+  deliveryElements.forEach(element => {
+    element.textContent = money(delivery);
   });
 
-  document.querySelectorAll(
-    "#checkoutTotal, .checkout-total, [data-checkout-total]"
-  ).forEach(el => {
-    el.textContent =
-      money(total);
+  const totalElements =
+    document.querySelectorAll(
+      "#checkoutTotal, .checkout-total"
+    );
+
+  totalElements.forEach(element => {
+    element.textContent = money(total);
   });
 }
 
 function getCheckoutData() {
+  const nameInput =
+    document.querySelector("#customerName");
+
+  const phoneInput =
+    document.querySelector("#customerPhone");
+
+  const addressInput =
+    document.querySelector("#customerAddress");
+
+  const noteInput =
+    document.querySelector("#customerNote");
+
   return {
-    name:
-      document
-        .getElementById("customerName")
-        ?.value
-        .trim() || "",
+    name: nameInput
+      ? nameInput.value.trim()
+      : "",
 
-    phone:
-      document
-        .getElementById("customerPhone")
-        ?.value
-        .trim() || "",
+    phone: phoneInput
+      ? phoneInput.value.trim()
+      : "",
 
-    address:
-      document
-        .getElementById("customerAddress")
-        ?.value
-        .trim() || "",
+    address: addressInput
+      ? addressInput.value.trim()
+      : "",
 
-    note:
-      document
-        .getElementById("customerNote")
-        ?.value
-        .trim() || "",
+    note: noteInput
+      ? noteInput.value.trim()
+      : "",
 
     payment:
       getSelectedPaymentMethod()
   };
 }
 
-/* ============================================================
-   PLACE ORDER
-   ============================================================ */
+// ============================================================
+// PLACE ORDER
+// ============================================================
 
 async function placeOrder() {
-  const button =
-    document.getElementById(
-      "placeOrderBtn"
-    );
-
   if (!cart.length) {
-    alert(
-      "কার্টে কোনো পণ্য নেই।"
-    );
+    alert("আপনার কার্ট খালি।");
     return;
   }
 
@@ -1169,30 +1184,22 @@ async function placeOrder() {
     getCheckoutData();
 
   if (!data.name) {
-    alert(
-      "আপনার নাম দিন।"
-    );
+    alert("আপনার নাম দিন।");
     return;
   }
 
   if (!data.phone) {
-    alert(
-      "ফোন নম্বর দিন।"
-    );
+    alert("আপনার ফোন নম্বর দিন।");
     return;
   }
 
   if (!data.address) {
-    alert(
-      "ঠিকানা দিন।"
-    );
+    alert("আপনার ঠিকানা দিন।");
     return;
   }
 
   if (!data.payment) {
-    alert(
-      "একটি পেমেন্ট মেথড নির্বাচন করুন।"
-    );
+    alert("একটি payment method নির্বাচন করুন।");
     return;
   }
 
@@ -1209,141 +1216,103 @@ async function placeOrder() {
     cart.map(item => ({
       id: item.id,
       name: item.name,
-      price:
-        Number(item.price) || 0,
-      quantity:
-        Number(item.quantity) || 0,
-      image:
-        item.image || ""
+      price: Number(item.price) || 0,
+      quantity: Number(item.quantity) || 1,
+      image: item.image || ""
     }));
 
-  if (button) {
-    button.disabled = true;
-    button.textContent =
-      "অর্ডার হচ্ছে...";
-  }
+  const orderPayload = {
+    customer_name: data.name,
+    phone: data.phone,
+    address: data.address,
+
+    items: orderItems,
+
+    subtotal: subtotal,
+    delivery_charge: delivery,
+    total: total,
+
+    payment_method:
+      data.payment || null,
+
+    note:
+      data.note || null,
+
+    status: "pending"
+  };
+
+  const button =
+    document.querySelector("#placeOrderBtn");
+
+  const originalButtonText =
+    button
+      ? button.textContent
+      : "";
 
   try {
+    if (button) {
+      button.disabled = true;
+      button.textContent =
+        "অর্ডার করা হচ্ছে...";
+    }
+
+    console.log(
+      "Creating order:",
+      orderPayload
+    );
+
     const {
       data: order,
       error
-    } = await supabaseClient
-      .from("orders")
-      .insert({
-        customer_name:
-          data.name,
-
-        phone:
-          data.phone,
-
-        address:
-          data.address,
-
-        items:
-          orderItems,
-
-        subtotal:
-          subtotal,
-
-        delivery_charge:
-          delivery,
-
-        total:
-          total,
-
-        payment_method:
-          data.payment || null,
-
-        note:
-          data.note || null,
-
-        status:
-          "pending"
-      })
-      .select()
-      .single();
+    } =
+      await supabaseClient
+        .from("orders")
+        .insert(orderPayload)
+        .select()
+        .single();
 
     if (error) {
       console.error(
-        "Order Error:",
+        "Order insert error:",
         error
       );
 
       alert(
-        "অর্ডার করা যায়নি: " +
+        "অর্ডার করা যায়নি।\n\n" +
         error.message
       );
-
-      if (button) {
-        button.disabled = false;
-        button.textContent =
-          "অর্ডার কনফার্ম করুন";
-      }
 
       return;
     }
 
-    /* Create WhatsApp message
-       BEFORE clearing cart */
+    console.log(
+      "Order created:",
+      order
+    );
+
+    // CREATE WHATSAPP MESSAGE
+    // BEFORE CART IS CLEARED
     const whatsappMessage =
       createWhatsAppMessage(
         order,
         data
       );
 
-    closeCheckout();
-
-    /* Clear cart correctly */
+    // CLEAR CART
     cart = [];
+
     saveCart();
     renderCart();
+    updateCartUI();
 
-    showOrderSuccess(order);
+    // CLOSE CHECKOUT
+    closeCheckout();
 
-    /* WhatsApp button */
-    const whatsappButton =
-      document.getElementById(
-        "successWhatsappBtn"
-      ) ||
-      document.getElementById(
-        "successWhatsAppBtn"
-      );
-
-    if (whatsappButton) {
-      const whatsappNumber =
-        getWhatsAppNumber();
-
-      if (whatsappNumber) {
-        whatsappButton.style.display =
-          "";
-
-        whatsappButton.onclick =
-          () => {
-            const url =
-              "https://wa.me/" +
-              whatsappNumber +
-              "?text=" +
-              encodeURIComponent(
-                whatsappMessage
-              );
-
-            window.open(
-              url,
-              "_blank"
-            );
-          };
-      } else {
-        whatsappButton.style.display =
-          "none";
-      }
-    }
-
-    if (button) {
-      button.disabled = false;
-
-      button.textContent =
-        "অর্ডার কনফার্ম করুন";
-    }
+    // SHOW SUCCESS
+    showOrderSuccess(
+      order,
+      whatsappMessage
+    );
 
   } catch (error) {
     console.error(
@@ -1352,158 +1321,232 @@ async function placeOrder() {
     );
 
     alert(
-      "অর্ডার করার সময় সমস্যা হয়েছে: " +
-      error.message
+      "অর্ডার করার সময় সমস্যা হয়েছে।\n\n" +
+      (error.message || error)
     );
 
+  } finally {
     if (button) {
       button.disabled = false;
 
       button.textContent =
-        "অর্ডার কনফার্ম করুন";
+        originalButtonText ||
+        "অর্ডার করুন";
     }
   }
 }
 
-/* ============================================================
-   WHATSAPP MESSAGE
-   ============================================================ */
+// ============================================================
+// WHATSAPP MESSAGE
+// ============================================================
 
 function createWhatsAppMessage(
   order,
-  data
+  customerData
 ) {
-  const orderId =
-    order?.id || "N/A";
+  const lines = [];
 
-  const items =
-    Array.isArray(order?.items)
-      ? order.items
-      : cart;
-
-  let message =
-    `🛍️ *Mona Variety Store - New Order*\n\n`;
-
-  message +=
-    `Order ID: ${orderId}\n`;
-
-  message +=
-    `Customer: ${data.name}\n`;
-
-  message +=
-    `Phone: ${data.phone}\n`;
-
-  message +=
-    `Address: ${data.address}\n\n`;
-
-  message +=
-    `*Products:*\n`;
-
-  items.forEach(
-    (item, index) => {
-      const itemTotal =
-        (Number(item.price) || 0) *
-        (Number(item.quantity) || 0);
-
-      message +=
-        `${index + 1}. ${item.name} × ${item.quantity} = ${money(itemTotal)}\n`;
-    }
+  lines.push(
+    "🛍️ *নতুন অর্ডার - Mona Variety Store*"
   );
 
-  message +=
-    `\nSubtotal: ${money(
-      order?.subtotal ??
-      getCartSubtotal()
-    )}\n`;
+  lines.push("");
 
-  message +=
-    `Delivery: ${money(
-      order?.delivery_charge ??
-      calculateDelivery()
-    )}\n`;
+  lines.push(
+    `📦 Order ID: ${order?.id || "N/A"}`
+  );
 
-  message +=
-    `Total: ${money(
-      order?.total ??
-      (
-        getCartSubtotal() +
-        calculateDelivery()
-      )
-    )}\n`;
+  lines.push(
+    `👤 নাম: ${customerData.name}`
+  );
 
-  message +=
-    `Payment: ${data.payment}\n`;
+  lines.push(
+    `📞 ফোন: ${customerData.phone}`
+  );
 
-  if (data.note) {
-    message +=
-      `Note: ${data.note}\n`;
+  lines.push(
+    `📍 ঠিকানা: ${customerData.address}`
+  );
+
+  lines.push("");
+
+  lines.push(
+    "🛒 *পণ্য:*"
+  );
+
+  cart.forEach((item, index) => {
+    const quantity =
+      Number(item.quantity) || 1;
+
+    const price =
+      Number(item.price) || 0;
+
+    const itemTotal =
+      price * quantity;
+
+    lines.push(
+      `${index + 1}. ${item.name} × ${quantity} = ${money(itemTotal)}`
+    );
+  });
+
+  // Use order.items if cart was already changed
+  if (
+    !cart.length &&
+    Array.isArray(order?.items)
+  ) {
+    order.items.forEach(
+      (item, index) => {
+        const quantity =
+          Number(item.quantity) || 1;
+
+        const price =
+          Number(item.price) || 0;
+
+        const itemTotal =
+          price * quantity;
+
+        lines.push(
+          `${index + 1}. ${item.name} × ${quantity} = ${money(itemTotal)}`
+        );
+      }
+    );
   }
 
-  return message;
+  lines.push("");
+
+  lines.push(
+    `💰 Subtotal: ${money(order.subtotal)}`
+  );
+
+  lines.push(
+    `🚚 Delivery: ${money(order.delivery_charge)}`
+  );
+
+  lines.push(
+    `💵 *Total: ${money(order.total)}*`
+  );
+
+  lines.push(
+    `💳 Payment: ${customerData.payment || order.payment_method || "N/A"}`
+  );
+
+  if (customerData.note) {
+    lines.push(
+      `📝 Note: ${customerData.note}`
+    );
+  }
+
+  return lines.join("\n");
 }
 
-/* ============================================================
-   SUCCESS MODAL
-   ============================================================ */
+// ============================================================
+// SUCCESS MODAL
+// ============================================================
 
 function showOrderSuccess(
-  order
+  order,
+  whatsappMessage
 ) {
   const modal =
-    document.getElementById(
-      "successModal"
+    document.querySelector(
+      "#successModal"
     ) ||
-    document.getElementById(
-      "orderSuccessModal"
+    document.querySelector(
+      ".success-modal"
     );
 
-  const idEl =
-    document.getElementById(
-      "successOrderId"
+  const orderIdElement =
+    document.querySelector(
+      "#successOrderId"
     );
 
-  if (idEl) {
-    idEl.textContent =
+  if (orderIdElement) {
+    orderIdElement.textContent =
       order?.id || "";
   }
 
-  if (modal) {
-    modal.classList.add(
-      "show"
+  const whatsappButton =
+    document.querySelector(
+      "#successWhatsappBtn"
+    ) ||
+    document.querySelector(
+      "#successWhatsAppBtn"
     );
 
-    modal.classList.add(
-      "active"
-    );
+  if (whatsappButton) {
+    const number =
+      getWhatsAppNumber();
+
+    if (number) {
+      whatsappButton.style.display =
+        "";
+
+      whatsappButton.onclick = () => {
+        const url =
+          "https://wa.me/" +
+          number +
+          "?text=" +
+          encodeURIComponent(
+            whatsappMessage || ""
+          );
+
+        window.open(
+          url,
+          "_blank"
+        );
+      };
+    } else {
+      whatsappButton.style.display =
+        "none";
+    }
   }
+
+  if (!modal) {
+    alert(
+      "অর্ডার সফল হয়েছে!\n\nOrder ID: " +
+      (order?.id || "")
+    );
+
+    return;
+  }
+
+  modal.classList.add("show");
+  modal.classList.add("active");
 }
 
 function closeSuccessModal() {
   const modal =
-    document.getElementById(
-      "successModal"
+    document.querySelector(
+      "#successModal"
     ) ||
-    document.getElementById(
-      "orderSuccessModal"
+    document.querySelector(
+      ".success-modal"
     );
 
   if (!modal) return;
 
-  modal.classList.remove(
-    "show",
-    "active"
-  );
+  modal.classList.remove("show");
+  modal.classList.remove("active");
 }
 
-/* ============================================================
-   SEARCH
-   ============================================================ */
+// ============================================================
+// SEARCH
+// ============================================================
 
-function handleSearch(
-  value
-) {
+function handleSearch(event) {
+  const input =
+    event?.target ||
+    document.querySelector(
+      "#searchInput"
+    ) ||
+    document.querySelector(
+      ".search-input"
+    );
+
+  if (!input) return;
+
   currentSearch =
-    String(value || "");
+    input.value || "";
 
   renderProducts();
 }
@@ -1511,217 +1554,177 @@ function handleSearch(
 function clearSearch() {
   currentSearch = "";
 
-  document.querySelectorAll(
-    "#searchInput, .search-input, [data-search-input]"
-  ).forEach(input => {
+  const inputs =
+    document.querySelectorAll(
+      "#searchInput, .search-input"
+    );
+
+  inputs.forEach(input => {
     input.value = "";
   });
 
   renderProducts();
 }
 
-/* ============================================================
-   EVENTS
-   ============================================================ */
+// ============================================================
+// EVENTS
+// ============================================================
 
 function bindEvents() {
-
-  /* Search */
-  const searchInputs =
-    document.querySelectorAll(
-      "#searchInput, .search-input, [data-search-input]"
+  // SEARCH
+  const searchInput =
+    document.querySelector(
+      "#searchInput"
+    ) ||
+    document.querySelector(
+      ".search-input"
     );
 
-  searchInputs.forEach(
-    input => {
-      input.addEventListener(
-        "input",
-        event => {
-          handleSearch(
-            event.target.value
-          );
-        }
-      );
-    }
-  );
+  if (searchInput) {
+    searchInput.addEventListener(
+      "input",
+      handleSearch
+    );
+  }
 
-  /* Cart buttons */
+  // CART BUTTON
   const cartButtons =
     document.querySelectorAll(
       "#cartBtn, .cart-btn, [data-open-cart]"
     );
 
-  cartButtons.forEach(
-    button => {
-      button.addEventListener(
-        "click",
-        openCart
-      );
-    }
-  );
+  cartButtons.forEach(button => {
+    button.addEventListener(
+      "click",
+      openCart
+    );
+  });
 
-  /* Checkout buttons */
+  // CHECKOUT BUTTON
   const checkoutButtons =
     document.querySelectorAll(
       "#checkoutBtn, .checkout-btn, [data-open-checkout]"
     );
 
-  checkoutButtons.forEach(
-    button => {
-      button.addEventListener(
-        "click",
-        openCheckout
-      );
-    }
-  );
+  checkoutButtons.forEach(button => {
+    button.addEventListener(
+      "click",
+      openCheckout
+    );
+  });
 
-  /* Close cart */
-  const closeCartButtons =
-    document.querySelectorAll(
-      "#closeCartBtn, .close-cart, [data-close-cart]"
+  // PLACE ORDER
+  const placeOrderButton =
+    document.querySelector(
+      "#placeOrderBtn"
     );
 
-  closeCartButtons.forEach(
-    button => {
-      button.addEventListener(
-        "click",
-        closeCart
-      );
-    }
-  );
-
-  /* Close checkout */
-  const closeCheckoutButtons =
-    document.querySelectorAll(
-      "#closeCheckoutBtn, .close-checkout, [data-close-checkout]"
-    );
-
-  closeCheckoutButtons.forEach(
-    button => {
-      button.addEventListener(
-        "click",
-        closeCheckout
-      );
-    }
-  );
-
-  /* Close product modal */
-  const closeProductButtons =
-    document.querySelectorAll(
-      "#closeProductModal, .close-product-modal, [data-close-product]"
-    );
-
-  closeProductButtons.forEach(
-    button => {
-      button.addEventListener(
-        "click",
-        closeProductModal
-      );
-    }
-  );
-
-  /* Close success modal */
-  const closeSuccessButtons =
-    document.querySelectorAll(
-      "#closeSuccessBtn, .close-success, [data-close-success]"
-    );
-
-  closeSuccessButtons.forEach(
-    button => {
-      button.addEventListener(
-        "click",
-        closeSuccessModal
-      );
-    }
-  );
-
-  /* Place order */
-  const placeButton =
-    document.getElementById(
-      "placeOrderBtn"
-    );
-
-  if (placeButton) {
-    placeButton.addEventListener(
+  if (placeOrderButton) {
+    placeOrderButton.addEventListener(
       "click",
       placeOrder
     );
   }
 
-  /* Checkout field changes */
-  const checkoutFields = [
-    "customerName",
-    "customerPhone",
-    "customerAddress",
-    "customerNote"
-  ];
+  // CLOSE BUTTONS
+  const closeCartButtons =
+    document.querySelectorAll(
+      "#closeCartBtn, .close-cart, [data-close-cart]"
+    );
 
-  checkoutFields.forEach(
-    id => {
-      const input =
-        document.getElementById(id);
+  closeCartButtons.forEach(button => {
+    button.addEventListener(
+      "click",
+      closeCart
+    );
+  });
 
-      if (input) {
-        input.addEventListener(
-          "input",
-          updateCheckoutTotals
-        );
-      }
-    }
-  );
+  const closeCheckoutButtons =
+    document.querySelectorAll(
+      "#closeCheckoutBtn, .close-checkout, [data-close-checkout]"
+    );
 
-  /* Close modal by overlay */
+  closeCheckoutButtons.forEach(button => {
+    button.addEventListener(
+      "click",
+      closeCheckout
+    );
+  });
+
+  const closeProductButtons =
+    document.querySelectorAll(
+      "#closeProductModal, .close-product-modal"
+    );
+
+  closeProductButtons.forEach(button => {
+    button.addEventListener(
+      "click",
+      closeProductModal
+    );
+  });
+
+  const closeSuccessButtons =
+    document.querySelectorAll(
+      "#closeSuccessModal, .close-success-modal"
+    );
+
+  closeSuccessButtons.forEach(button => {
+    button.addEventListener(
+      "click",
+      closeSuccessModal
+    );
+  });
+
+  // UPDATE CHECKOUT WHEN PAYMENT CHANGES
   document.addEventListener(
-    "click",
+    "change",
     event => {
-      const target =
-        event.target;
-
       if (
-        target.matches(
-          ".modal-overlay"
-        )
+        event.target &&
+        event.target.name ===
+          "paymentMethod"
       ) {
-        target.classList.remove(
-          "show",
-          "active"
-        );
+        updateCheckoutTotals();
       }
     }
   );
 }
 
-/* ============================================================
-   RENDER ALL
-   ============================================================ */
+// ============================================================
+// RENDER ALL
+// ============================================================
 
 function renderAll() {
   renderCategories();
-  renderCategoriesActiveState();
   renderProducts();
+  renderPaymentMethods();
   renderCart();
-  updateCheckoutTotals();
   updateCartUI();
+  updateCheckoutTotals();
 
-  const shopName =
+  // STORE NAME
+  const storeName =
     getSettingValue(
       "store_name",
-      "shop_name",
       "name",
       "business_name"
     );
 
-  if (shopName) {
-    document
-      .querySelectorAll(
-        ".store-name, #storeName, [data-store-name]"
-      )
-      .forEach(el => {
-        el.textContent =
-          shopName;
-      });
+  if (storeName) {
+    const nameElements =
+      document.querySelectorAll(
+        "#storeName, .store-name"
+      );
+
+    nameElements.forEach(
+      element => {
+        element.textContent =
+          storeName;
+      }
+    );
   }
 
+  // STORE LOGO
   const logo =
     getSettingValue(
       "logo_url",
@@ -1730,23 +1733,27 @@ function renderAll() {
     );
 
   if (logo) {
-    document
-      .querySelectorAll(
-        ".store-logo, #storeLogo, [data-store-logo]"
-      )
-      .forEach(el => {
+    const logoElements =
+      document.querySelectorAll(
+        "#storeLogo, .store-logo"
+      );
+
+    logoElements.forEach(
+      element => {
         if (
-          el.tagName === "IMG"
+          element.tagName ===
+          "IMG"
         ) {
-          el.src = logo;
+          element.src = logo;
         }
-      });
+      }
+    );
   }
 }
 
-/* ============================================================
-   COMPATIBILITY FUNCTIONS
-   ============================================================ */
+// ============================================================
+// COMPATIBILITY FUNCTIONS
+// ============================================================
 
 function renderProductGrid() {
   renderProducts();
@@ -1763,9 +1770,9 @@ function closeModal() {
   closeSuccessModal();
 }
 
-/* ============================================================
-   GLOBAL FUNCTIONS
-   ============================================================ */
+// ============================================================
+// GLOBAL EXPORTS
+// ============================================================
 
 window.loadCart =
   loadCart;
@@ -1829,3 +1836,470 @@ window.displayProducts =
 
 window.closeModal =
   closeModal;
+
+// ============================================================
+// END PART 2
+// ============================================================// ============================================================
+// MONA VARIETY STORE - APP.JS
+// PART 3 / 3
+// ============================================================
+
+// ============================================================
+// EXTRA UI HELPERS
+// ============================================================
+
+function refreshProductDisplay() {
+  renderProducts();
+  updateCartUI();
+  renderCart();
+  updateCheckoutTotals();
+}
+
+function refreshStoreUI() {
+  renderCategories();
+  renderProducts();
+  renderPaymentMethods();
+  renderCart();
+  updateCartUI();
+  updateCartTotals();
+  updateCheckoutTotals();
+}
+
+// ============================================================
+// OUTSIDE CLICK HANDLING
+// ============================================================
+
+document.addEventListener("click", event => {
+  const target = event.target;
+
+  // PRODUCT MODAL CLOSE
+  const productModal =
+    document.querySelector("#productModal") ||
+    document.querySelector(".product-modal");
+
+  if (
+    productModal &&
+    target === productModal
+  ) {
+    closeProductModal();
+  }
+
+  // CART MODAL CLOSE
+  const cartModal =
+    document.querySelector("#cartModal") ||
+    document.querySelector(".cart-modal");
+
+  if (
+    cartModal &&
+    target === cartModal
+  ) {
+    closeCart();
+  }
+
+  // CHECKOUT MODAL CLOSE
+  const checkoutModal =
+    document.querySelector("#checkoutModal") ||
+    document.querySelector(".checkout-modal");
+
+  if (
+    checkoutModal &&
+    target === checkoutModal
+  ) {
+    closeCheckout();
+  }
+
+  // SUCCESS MODAL CLOSE
+  const successModal =
+    document.querySelector("#successModal") ||
+    document.querySelector(".success-modal");
+
+  if (
+    successModal &&
+    target === successModal
+  ) {
+    closeSuccessModal();
+  }
+});
+
+// ============================================================
+// ESC KEY
+// ============================================================
+
+document.addEventListener(
+  "keydown",
+  event => {
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    closeProductModal();
+    closeCart();
+    closeCheckout();
+    closeSuccessModal();
+  }
+);
+
+// ============================================================
+// CART STORAGE SYNC
+// ============================================================
+
+window.addEventListener(
+  "storage",
+  event => {
+    if (
+      event.key !==
+      "monaCart"
+    ) {
+      return;
+    }
+
+    loadCart();
+    updateCartUI();
+    renderCart();
+    updateCheckoutTotals();
+  }
+);
+
+// ============================================================
+// HANDLE PAGE VISIBILITY
+// ============================================================
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+    if (
+      document.visibilityState ===
+      "visible"
+    ) {
+      loadCart();
+      updateCartUI();
+    }
+  }
+);
+
+// ============================================================
+// IMAGE FALLBACK
+// ============================================================
+
+document.addEventListener(
+  "error",
+  event => {
+    const element =
+      event.target;
+
+    if (
+      element &&
+      element.tagName === "IMG"
+    ) {
+      if (
+        element.classList.contains(
+          "product-image"
+        ) ||
+        element.closest(
+          ".product-image"
+        )
+      ) {
+        element.style.display =
+          "none";
+      }
+    }
+  },
+  true
+);
+
+// ============================================================
+// NUMBER FORMAT
+// ============================================================
+
+function formatNumber(value) {
+  const number =
+    Number(value) || 0;
+
+  return number.toLocaleString(
+    "en-BD"
+  );
+}
+
+// ============================================================
+// PRODUCT LOOKUP
+// ============================================================
+
+function getProductById(id) {
+  return products.find(
+    product =>
+      String(product.id) ===
+      String(id)
+  );
+}
+
+// ============================================================
+// CART ITEM LOOKUP
+// ============================================================
+
+function getCartItemById(id) {
+  return cart.find(
+    item =>
+      String(item.id) ===
+      String(id)
+  );
+}
+
+// ============================================================
+// CHECKOUT VALIDATION
+// ============================================================
+
+function validateCheckout() {
+  const data =
+    getCheckoutData();
+
+  if (!data.name) {
+    return {
+      valid: false,
+      message:
+        "আপনার নাম দিন।"
+    };
+  }
+
+  if (!data.phone) {
+    return {
+      valid: false,
+      message:
+        "আপনার ফোন নম্বর দিন।"
+    };
+  }
+
+  if (!data.address) {
+    return {
+      valid: false,
+      message:
+        "আপনার ঠিকানা দিন।"
+    };
+  }
+
+  if (!data.payment) {
+    return {
+      valid: false,
+      message:
+        "একটি payment method নির্বাচন করুন।"
+    };
+  }
+
+  return {
+    valid: true,
+    data
+  };
+}
+
+// ============================================================
+// SAFE WHATSAPP OPEN
+// ============================================================
+
+function openWhatsAppMessage(
+  message
+) {
+  const number =
+    getWhatsAppNumber();
+
+  if (!number) {
+    alert(
+      "WhatsApp নম্বর পাওয়া যায়নি।"
+    );
+
+    return;
+  }
+
+  const url =
+    "https://wa.me/" +
+    number +
+    "?text=" +
+    encodeURIComponent(
+      message || ""
+    );
+
+  window.open(
+    url,
+    "_blank"
+  );
+}
+
+// ============================================================
+// STORE CONTACT
+// ============================================================
+
+function getStorePhone() {
+  return normalizePhone(
+    getSettingValue(
+      "phone",
+      "phone_number",
+      "mobile",
+      "contact_phone"
+    ) || ""
+  );
+}
+
+function getStoreFacebook() {
+  return (
+    getSettingValue(
+      "facebook",
+      "facebook_url",
+      "facebook_link"
+    ) || ""
+  );
+}
+
+function getStoreTikTok() {
+  return (
+    getSettingValue(
+      "tiktok",
+      "tiktok_url",
+      "tiktok_link"
+    ) || ""
+  );
+}
+
+// ============================================================
+// UPDATE CONTACT LINKS
+// ============================================================
+
+function updateContactLinks() {
+  const whatsapp =
+    getWhatsAppNumber();
+
+  const phone =
+    getStorePhone();
+
+  const facebook =
+    getStoreFacebook();
+
+  const tiktok =
+    getStoreTikTok();
+
+  if (whatsapp) {
+    document
+      .querySelectorAll(
+        'a[href*="wa.me"], [data-whatsapp]'
+      )
+      .forEach(link => {
+        link.href =
+          "https://wa.me/" +
+          whatsapp;
+      });
+  }
+
+  if (phone) {
+    document
+      .querySelectorAll(
+        'a[href^="tel:"], [data-phone]'
+      )
+      .forEach(link => {
+        link.href =
+          "tel:" +
+          phone;
+      });
+  }
+
+  if (facebook) {
+    document
+      .querySelectorAll(
+        '[data-facebook]'
+      )
+      .forEach(link => {
+        link.href =
+          facebook;
+      });
+  }
+
+  if (tiktok) {
+    document
+      .querySelectorAll(
+        '[data-tiktok]'
+      )
+      .forEach(link => {
+        link.href =
+          tiktok;
+      });
+  }
+}
+
+// ============================================================
+// UPDATE STORE CONTACT AFTER SETTINGS LOAD
+// ============================================================
+
+setTimeout(() => {
+  try {
+    updateContactLinks();
+  } catch (error) {
+    console.warn(
+      "Contact link update error:",
+      error
+    );
+  }
+}, 1500);
+
+// ============================================================
+// WINDOW RESIZE
+// ============================================================
+
+window.addEventListener(
+  "resize",
+  () => {
+    // Keep this lightweight.
+    // No unnecessary re-render on resize.
+  }
+);
+
+// ============================================================
+// DEBUG HELPERS
+// ============================================================
+
+window.MonaStore = {
+  get products() {
+    return products;
+  },
+
+  get categories() {
+    return categories;
+  },
+
+  get cart() {
+    return cart;
+  },
+
+  get paymentMethods() {
+    return paymentMethods;
+  },
+
+  get storeSettings() {
+    return storeSettings;
+  },
+
+  refresh() {
+    refreshStoreUI();
+  },
+
+  reloadProducts() {
+    return loadProducts().then(
+      () => {
+        renderProducts();
+      }
+    );
+  },
+
+  reloadCart() {
+    loadCart();
+    updateCartUI();
+    renderCart();
+  }
+};
+
+// ============================================================
+// FINAL INITIALIZATION CHECK
+// ============================================================
+
+console.log(
+  "Mona Variety Store app.js loaded successfully."
+);
+
+// ============================================================
+// END OF APP.JS
+// ============================================================
