@@ -6362,12 +6362,10 @@ async function uploadProductImageIfSelected() {
         return null;
     }
 
-    const file = fileInput.files[0];
+    const file =
+        fileInput.files[0];
 
-    if (
-        !file.type ||
-        !file.type.startsWith("image/")
-    ) {
+    if (!file.type.startsWith("image/")) {
         throw new Error(
             "শুধু image file upload করা যাবে।"
         );
@@ -6389,10 +6387,7 @@ async function uploadProductImageIfSelected() {
         file.name
             .replace(/\.[^/.]+$/, "")
             .replace(/[^a-zA-Z0-9-_]/g, "-")
-            .replace(/-+/g, "-")
-            .replace(/^-|-$/g, "")
-            .toLowerCase() ||
-        "product-image";
+            .toLowerCase();
 
     const filePath =
         "products/" +
@@ -6400,25 +6395,24 @@ async function uploadProductImageIfSelected() {
         "-" +
         Math.random()
             .toString(36)
-            .substring(2, 10) +
+            .substring(2, 8) +
         "-" +
         safeName +
         "." +
         extension;
 
     console.log(
-        "Uploading product image:",
+        "Bucket: product-images"
+    );
+
+    console.log(
+        "File path:",
         filePath
     );
 
-    /* ========================================================
-       UPLOAD
-       BUCKET: product-images
-       ======================================================== */
-
     const {
-        data: uploadData,
-        error: uploadError
+        data,
+        error
     } =
         await supabaseClient.storage
             .from("product-images")
@@ -6432,52 +6426,44 @@ async function uploadProductImageIfSelected() {
                 }
             );
 
-    if (uploadError) {
+    if (error) {
 
         console.error(
-            "PRODUCT IMAGE UPLOAD ERROR:",
-            uploadError
+            "STORAGE ERROR:",
+            error
         );
 
         throw new Error(
-            uploadError.message ||
-            "Product image upload failed."
+            error.message ||
+            "Image upload failed."
         );
     }
 
-    console.log(
-        "Product image uploaded:",
-        uploadData
-    );
-
-    /* ========================================================
-       GET PUBLIC URL
-       ======================================================== */
-
     const {
-        data: publicUrlData
+        data: urlData
     } =
         supabaseClient.storage
             .from("product-images")
-            .getPublicUrl(filePath);
+            .getPublicUrl(
+                filePath
+            );
 
-    const publicUrl =
-        publicUrlData?.publicUrl;
-
-    if (!publicUrl) {
+    if (
+        !urlData ||
+        !urlData.publicUrl
+    ) {
         throw new Error(
-            "Image upload হয়েছে কিন্তু public URL পাওয়া যায়নি।"
+            "Image URL পাওয়া যায়নি।"
         );
     }
 
     console.log(
-        "PRODUCT IMAGE URL:",
-        publicUrl
+        "Image URL:",
+        urlData.publicUrl
     );
 
-    return publicUrl;
+    return urlData.publicUrl;
 }
-
 
 /* ============================================================
    SAVE PRODUCT
