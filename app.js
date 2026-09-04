@@ -2896,3 +2896,5 @@ document.addEventListener(
 
   }
 );
+console.log("APP JS LOADED");
+loadProducts();
