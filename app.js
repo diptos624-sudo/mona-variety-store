@@ -1261,34 +1261,24 @@ async function placeOrder() {
       orderPayload
     );
 
-    const {
-      data: order,
-      error
-    } =
-      await supabaseClient
-        .from("orders")
-        .insert(orderPayload)
-        .select()
-        .single();
+    const { data: order, error } = await supabaseClient
+  .from("orders")
+  .insert(orderPayload)
+  .select()
+  .single();
 
-    if (error) {
-      console.error(
-        "Order insert error:",
-        error
-      );
+if (error) {
+  console.error("Order insert error:", error);
 
-      alert(
-        "অর্ডার করা যায়নি।\n\n" +
-        error.message
-      );
+  alert(
+    "অর্ডার করা যায়নি।\n\n" +
+    error.message
+  );
 
-      return;
-    }
+  return;
+}
 
-    console.log(
-      "Order created:",
-      order
-    );
+console.log("Order created:", order);
 
     // CREATE WHATSAPP MESSAGE
     // BEFORE CART IS CLEARED
