@@ -1994,162 +1994,372 @@ function validateCheckout(
 // ==========================================
 
 async function placeOrder() {
+    try {
+        // ============================================
+        // CUSTOMER DATA
+        // ============================================
 
-  const data =
-    getCheckoutData();
+        const name =
+            document.getElementById("customerName")?.value?.trim() || "";
 
+        const phone =
+            document.getElementById("customerPhone")?.value?.trim() || "";
 
-  if (
-    !validateCheckout(data)
-  ) {
+        const address =
+            document.getElementById("customerAddress")?.value?.trim() || "";
 
-    return;
+        const note =
+            document.getElementById("customerNote")?.value?.trim() || "";
 
-  }
+        // Payment method
+        const paymentRadio =
+            document.querySelector(
+                'input[name="paymentMethod"]:checked'
+            );
 
+        const payment =
+            paymentRadio?.value ||
+            paymentRadio?.dataset?.name ||
+            "";
 
-  if (!cart.length) {
+        // ============================================
+        // VALIDATION
+        // ============================================
 
-    alert(
-      "কার্ট খালি।"
-    );
+        if (!name) {
+            alert("আপনার নাম লিখুন।");
+            return;
+        }
 
-    return;
+        if (!phone) {
+            alert("আপনার ফোন নম্বর লিখুন।");
+            return;
+        }
 
-  }
+        if (!address) {
+            alert("আপনার ঠিকানা লিখুন।");
+            return;
+        }
 
+        if (!cart || cart.length === 0) {
+            alert("আপনার কার্ট খালি।");
+            return;
+        }
 
-  const subtotal =
-    getCartSubtotal();
+        // ============================================
+        // TOTAL
+        // ============================================
 
+        const subtotal = cart.reduce(
+            (sum, item) =>
+                sum +
+                (Number(item.price) || 0) *
+                    (Number(item.quantity) || 0),
+            0
+        );
 
-  const delivery =
-    calculateDelivery();
+        const delivery = Number(deliveryCharge) || 0;
 
+        const total = subtotal + delivery;
 
-  const total =
-    subtotal +
-    delivery;
+        // ============================================
+        // ORDER ITEMS
+        // ============================================
 
+        const orderItems = cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: Number(item.price) || 0,
+            quantity: Number(item.quantity) || 0,
+            total:
+                (Number(item.price) || 0) *
+                (Number(item.quantity) || 0)
+        }));
 
-  const button =
-    document.getElementById(
-      "placeOrderBtn"
-    );
+        // ============================================
+        // BUTTON LOADING
+        // ============================================
 
+        const placeBtn =
+            document.getElementById("placeOrderBtn");
 
-  if (button) {
+        if (placeBtn) {
+            placeBtn.disabled = true;
+            placeBtn.dataset.oldText =
+                placeBtn.innerText;
 
-    button.disabled =
-      true;
+            placeBtn.innerText =
+                "অর্ডার করা হচ্ছে...";
+        }
 
-    button.textContent =
-      "অর্ডার পাঠানো হচ্ছে...";
+        // ============================================
+        // INSERT ORDER
+        // ============================================
 
-  }
+        const { data: order, error } =
+            await supabaseClient
+                .from("orders")
+                .insert({
+                    customer_name: name,
+                    phone: phone,
+                    address: address,
+                    items: orderItems,
+                    subtotal: subtotal,
+                    delivery_charge: delivery,
+                    total: total,
+                    payment_method: payment || null,
+                    note: note || null,
+                    status: "pending"
+                })
+                .select()
+                .single();
 
+        // ============================================
+        // ERROR
+        // ============================================
 
-  // SAVE CART ITEMS BEFORE CLEARING
-  const orderItems =
-    cart.map(
-      item => ({
+        if (error) {
 
-        id:
-          item.id,
+            console.error(
+                "ORDER INSERT ERROR:",
+                error
+            );
 
-        name:
-          item.name,
+            alert(
+                "Order Error:\n\n" +
+                "Message: " +
+                (error.message || "") +
+                "\n\nCode: " +
+                (error.code || "") +
+                "\n\nDetails: " +
+                (error.details || "") +
+                "\n\nHint: " +
+                (error.hint || "")
+            );
 
-        price:
-          item.price,
+            if (placeBtn) {
+                placeBtn.disabled = false;
+                placeBtn.innerText =
+                    placeBtn.dataset.oldText ||
+                    "অর্ডার কনফার্ম করুন";
+            }
 
-        quantity:
-          item.quantity,
+            return;
+        }
 
-        total:
-          item.price *
-          item.quantity
+        // ============================================
+        // ORDER SUCCESS
+        // ============================================
 
-      })
-    );
+        console.log(
+            "ORDER CREATED SUCCESSFULLY:",
+            order
+        );
 
+        // WhatsApp message
+        let whatsappMessage =
+            "🛍️ *মনা ভ্যারাইটি স্টোর - নতুন অর্ডার*%0A%0A";
 
-  const {
-    data: order,
-    error
-  } =
-    await supabaseClient
-      .from("orders")
-      .insert({
+        whatsappMessage +=
+            "📦 *Order ID:* " +
+            (order.id || "") +
+            "%0A";
 
-        customer_name:
-          data.name,
+        whatsappMessage +=
+            "👤 *নাম:* " +
+            encodeURIComponent(name) +
+            "%0A";
 
-        phone:
-          data.phone,
+        whatsappMessage +=
+            "📞 *ফোন:* " +
+            encodeURIComponent(phone) +
+            "%0A";
 
-        address:
-          data.address,
+        whatsappMessage +=
+            "📍 *ঠিকানা:* " +
+            encodeURIComponent(address) +
+            "%0A%0A";
 
-        items:
-          orderItems,
+        whatsappMessage +=
+            "🛒 *Products:*%0A";
 
-        subtotal:
-          subtotal,
+        orderItems.forEach((item, index) => {
 
-        delivery_charge:
-          delivery,
+            whatsappMessage +=
+                (index + 1) +
+                ". " +
+                encodeURIComponent(item.name) +
+                " × " +
+                item.quantity +
+                " = ৳" +
+                item.total +
+                "%0A";
+        });
 
-        total:
-          total,
+        whatsappMessage +=
+            "%0A💰 *Subtotal:* ৳" +
+            subtotal;
 
-        payment_method:
-          data.payment,
+        whatsappMessage +=
+            "%0A🚚 *Delivery:* ৳" +
+            delivery;
 
-        note:
-          data.note,
+        whatsappMessage +=
+            "%0A💵 *Total:* ৳" +
+            total;
 
-        status:
-          "pending"
+        if (payment) {
+            whatsappMessage +=
+                "%0A💳 *Payment:* " +
+                encodeURIComponent(payment);
+        }
 
-      })
-      .select()
-      .single();
+        if (note) {
+            whatsappMessage +=
+                "%0A📝 *Note:* " +
+                encodeURIComponent(note);
+        }
 
+        // ============================================
+        // CLEAR CART
+        // ============================================
 
-  if (error) {
+        cart = [];
 
-    console.error(
-      "ORDER ERROR FULL:",
-      JSON.stringify(error, null, 2)
-    );
+        localStorage.setItem(
+            "cart",
+            JSON.stringify(cart)
+        );
 
-    alert(
-      "Order Error:\n" +
-      (error?.message || "") +
-      "\nCode: " +
-      (error?.code || "") +
-      "\nDetails: " +
-      (error?.details || "") +
-      "\nHint: " +
-      (error?.hint || "")
-    );
+        // ============================================
+        // UPDATE UI
+        // ============================================
 
+        if (typeof updateCartUI === "function") {
+            updateCartUI();
+        }
 
-    alert(
-      "অর্ডার পাঠানো যায়নি। আবার চেষ্টা করুন।"
-    );
+        if (typeof renderCart === "function") {
+            renderCart();
+        }
 
+        // Close checkout modal
+        const checkoutModal =
+            document.getElementById(
+                "checkoutModal"
+            );
 
-    if (button) {
+        if (checkoutModal) {
+            checkoutModal.classList.remove(
+                "active"
+            );
 
-      button.disabled =
-        false;
+            checkoutModal.style.display = "none";
+        }
 
-      button.textContent =
-        "অর্ডার কনফার্ম করুন";
+        // ============================================
+        // SUCCESS ORDER ID
+        // ============================================
 
+        const successOrderId =
+            document.getElementById(
+                "successOrderId"
+            );
+
+        if (successOrderId) {
+            successOrderId.innerText =
+                order.id || "";
+        }
+
+        // ============================================
+        // SUCCESS MODAL
+        // ============================================
+
+        const successModal =
+            document.getElementById(
+                "successModal"
+            );
+
+        if (successModal) {
+            successModal.classList.add(
+                "active"
+            );
+
+            successModal.style.display =
+                "flex";
+        }
+
+        // ============================================
+        // WHATSAPP BUTTON
+        // ============================================
+
+        const whatsappBtn =
+            document.getElementById(
+                "successWhatsAppBtn"
+            );
+
+        if (whatsappBtn) {
+
+            // তোমার WhatsApp number এখানে না থাকলে
+            // config.js-এর number ব্যবহার করবে।
+
+            const whatsappNumber =
+                window.WHATSAPP_NUMBER ||
+                "8801913726867";
+
+            whatsappBtn.onclick = function () {
+
+                const url =
+                    "https://wa.me/" +
+                    whatsappNumber +
+                    "?text=" +
+                    whatsappMessage;
+
+                window.open(
+                    url,
+                    "_blank"
+                );
+            };
+        }
+
+        // ============================================
+        // RESTORE BUTTON
+        // ============================================
+
+        if (placeBtn) {
+            placeBtn.disabled = false;
+
+            placeBtn.innerText =
+                placeBtn.dataset.oldText ||
+                "অর্ডার কনফার্ম করুন";
+        }
+
+    } catch (err) {
+
+        console.error(
+            "PLACE ORDER ERROR:",
+            err
+        );
+
+        alert(
+            "অর্ডার দিতে সমস্যা হয়েছে।\n\n" +
+            (err?.message || err)
+        );
+
+        const placeBtn =
+            document.getElementById(
+                "placeOrderBtn"
+            );
+
+        if (placeBtn) {
+            placeBtn.disabled = false;
+
+            placeBtn.innerText =
+                placeBtn.dataset.oldText ||
+                "অর্ডার কনফার্ম করুন";
+        }
     }
+}
 
 
     return;
