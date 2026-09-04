@@ -1220,7 +1220,9 @@ async function placeOrder() {
       quantity: Number(item.quantity) || 1,
       image: item.image || ""
     }));
-
+console.log("SUPABASE PROJECT:", supabaseClient.supabaseUrl);
+console.log("SUPABASE ROLE:", (await supabaseClient.auth.getSession()).data.session?.user ? "authenticated" : "anon");
+console.log("ORDER PAYLOAD:", orderPayload);
   const orderPayload = {
   customer_name: String(data.name || "").trim(),
   phone: String(data.phone || "").trim(),
