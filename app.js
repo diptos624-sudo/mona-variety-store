@@ -1287,31 +1287,29 @@ try {
     return;
   }
 
-  const {
-    data: order,
-    error
-  } = await supabaseClient
-    .from("orders")
-    .insert(orderPayload)
-    .select()
-    .single();
+const { error } = await supabaseClient
+  .from("orders")
+  .insert(orderPayload);
 
-  if (error) {
-    console.error("Order insert error:", error);
+if (error) {
+  console.error("Order insert error:", error);
 
-    alert(
-      "অর্ডার করা যায়নি।\n\n" +
-      error.message
-    );
+  alert(
+    "অর্ডার করা যায়নি।\n\n" +
+    error.message
+  );
 
-    if (button) {
-      button.disabled = false;
-      button.textContent = originalButtonText;
-    }
-
-    return;
+  if (button) {
+    button.disabled = false;
+    button.textContent = originalButtonText;
   }
 
+  return;
+}
+
+const order = {
+  ...orderPayload
+};
   console.log("Order created:", order);
 
     // CREATE WHATSAPP MESSAGE
