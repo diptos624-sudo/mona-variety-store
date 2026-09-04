@@ -1,0 +1,1 @@
+# mona-variety-store
