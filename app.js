@@ -515,15 +515,49 @@ function filterCategory(name) {
 
 async function loadProducts() {
 
+  console.log("Loading products...");
+
   const { data, error } =
     await supabaseClient
       .from("products")
       .select("*")
-      .eq("active", true)
       .order("created_at", {
         ascending: false
       });
 
+  if (error) {
+
+    console.error(
+      "Product Error:",
+      error
+    );
+
+    products = [];
+
+    return;
+
+  }
+
+  console.log(
+    "Products loaded:",
+    data
+  );
+
+  products = data || [];
+
+  // Product render
+  if (typeof renderProducts === "function") {
+    renderProducts();
+  }
+
+  if (typeof renderProductGrid === "function") {
+    renderProductGrid();
+  }
+
+  if (typeof displayProducts === "function") {
+    displayProducts();
+  }
+}
 
   if (error) {
 
